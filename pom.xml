@@ -37,6 +37,21 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- "recommended but not required". what does it do, and why? -->
+		<dependency>
+			<groupId>org.scalactic</groupId>
+			<artifactId>scalactic_2.11</artifactId>
+			<version>3.0.1</version>
+		</dependency>
+
+		<!-- look into the scalatest compiler plugin -->
+		<dependency>
+			<groupId>org.scalatest</groupId>
+			<artifactId>scalatest_2.11</artifactId>
+			<version>3.0.1</version>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>

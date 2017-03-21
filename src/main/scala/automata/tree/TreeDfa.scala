@@ -6,7 +6,6 @@ import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiEdge
 import TreeAutomata._
 
-
 //TODO: enforce minimal
 /** a minimal tree dfa representation, parsed from levaes to roots*/
 case class TreeDfa[LABEL, ID](transitions: Set[Transition[LABEL, ID]], override val roots: Set[ID]) extends TreeAutomata[LABEL, ID] {
@@ -177,6 +176,7 @@ case class TreeDfa[LABEL, ID](transitions: Set[Transition[LABEL, ID]], override 
   }
 
   //TODO: should use ordering on labels to standardize, so this can get the normal form
+  //TODO: rename
   def withIntId: TreeDfa[LABEL, Int] = {
     val idMap = ids.zipWithIndex.toMap
 

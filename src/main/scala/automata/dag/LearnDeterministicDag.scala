@@ -40,4 +40,56 @@ object LearnDeterministicDag {
 
     DagDfa(incoming, outgoing, fullMap.values.toSet)
   }
+
+  def greedyLearn[LABEL,A](
+    g: Graph[A, DiEdge])(
+      describe: A => LABEL): DagDfa[LABEL, Int,Int] = {
+    require(g.isDirected)
+    require(g.isAcyclic)
+
+    val base = prefixSuffixDfa(g)(describe).withIdIndex(g)(describe) //already minimized
+
+    var knownCosts = Map[DagDfa[LABEL, Int, Int], Double](base -> base.mdl(g)(describe))
+
+    var activeParents = Set[DagDfa[LABEL, Int, Int]](base)
+
+    var lowestSeenCost = knownCosts.values.last
+
+    while (!activeParents.isEmpty) {
+      val cheapest = activeParents.minBy(knownCosts)
+
+      if (knownCosts(cheapest) < lowestSeenCost) {
+        println
+        println("cost " + knownCosts(cheapest))
+//        println(cheapest.transitions.mkString("\n"))
+//        println(cheapest.roots)
+        println
+        lowestSeenCost = knownCosts(cheapest)
+      } else {
+        print(".")
+      }
+
+
+      var newParents = Set[DagDfa[LABEL, Int, Int]]()
+
+      for (
+        pairs <- cheapest.okPairs.subsets(2);
+        List(a, b) = pairs.toList
+      ) {
+
+        
+        val newDfa = cheapest.merge(a, b)(g)(describe).withIdIndex(g)(describe)
+
+        if (!knownCosts.contains(newDfa)) {
+          knownCosts += (newDfa -> newDfa.mdl(g)(describe))
+          newParents += newDfa
+        }
+
+      }
+
+      activeParents = (activeParents ++ newParents) - cheapest
+    }
+
+    knownCosts.minBy(_._2)._1
+  }
 }
