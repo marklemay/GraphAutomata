@@ -12,6 +12,7 @@ import scalax.collection.GraphEdge.DiEdge
 import scalax.collection.GraphPredef
 import automata.tree.LearnTreeAutomata
 import org.scalatest.junit.AssertionsForJUnit
+import org.scalatest.Ignore
 
 @Test
 class TestExamples extends AssertionsForJUnit {
@@ -31,7 +32,7 @@ class TestExamples extends AssertionsForJUnit {
       "a_2_0" ~> "a_2_1", "a_2_1" ~> "a_2_2", "a_2_2" ~> "a_2_3")
     //    println(g)
 
-    val detdag = LearnDeterministicDag.greedyLearn(g)(describe)
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe)
     //    println(detdag)
 
     assert(detdag.parse(g)(describe).isDefined, "should be able to parse itself")
@@ -57,7 +58,7 @@ class TestExamples extends AssertionsForJUnit {
       "a_4" ~> "b_4", "b_4" ~> "c_4", "c_4" ~> "d_4")
     //    println(g)
 
-    val detdag = LearnDeterministicDag.greedyLearn(g)(describe)
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe)
     //TODO: when the code settles down we can make sure this converges to the expected litteral
     //    println
     //    println(detdag)
@@ -74,15 +75,123 @@ class TestExamples extends AssertionsForJUnit {
     assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a string with a different patern")
   }
 
+  @Test
+  def learnRepeadtedStringPattern: Unit = {
+
+    //TODO need to figure out hyper edges to make these graph literals more concise
+    val g = Graph(
+      "a_0" ~> "b_0", "b_0" ~> "a_1",
+      "a_1" ~> "b_1", "b_1" ~> "a_2",
+      "a_2" ~> "b_2", "b_2" ~> "a_3",
+      "a_3" ~> "b_3", "b_3" ~> "a_4",
+      "a_4" ~> "b_4", "b_4" ~> "a_5")
+
+    assert(g.isConnected)
+    //    println(g)
+
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe)
+    //TODO: when the code settles down we can make sure this converges to the expected litteral
+    //    println
+    //    println(detdag)
+
+    assert(detdag.parse(g)(describe).isDefined, "should be able to parse itself")
+
+    val g2 = Graph(
+      "a_0" ~> "b_0", "b_0" ~> "a_1",
+      "a_1" ~> "b_1", "b_1" ~> "a_2",
+      "a_2" ~> "b_2", "b_2" ~> "a_3",
+      "a_3" ~> "b_3", "b_3" ~> "a_4",
+      "a_4" ~> "b_4", "b_4" ~> "a_5",
+      "a_5" ~> "b_5", "b_5" ~> "a_6")
+    assert(detdag.parse(g2)(describe).isDefined, "should be able to parse a similar but unseen string")
+
+    val bad1 = Graph(
+      "a_0" ~> "b_0", "b_0" ~> "a_1",
+      "a_1" ~> "b_1", "b_1" ~> "a_2",
+      "a_2" ~> "b_2", "b_2" ~> "a_3",
+      "a_3" ~> "b_3", "b_3" ~> "a_4",
+      "a_4" ~> "b_4", "b_4" ~> "b_5")
+
+    //    println(detdag.parse(bad1)(describe))
+
+    assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a string that does not match the underlieing patern")
+  }
+
+  @Test
+  def learnDisjointConcreteStrings: Unit = {
+
+    //TODO need to figure out hyper edges to make these graph literals more concise
+    val g = Graph(
+      "a_0" ~> "b_0", "b_0" ~> "c_0", "c_0" ~> "d_0",
+
+      "a_1" ~> "b_1", "b_1" ~> "c_1", "c_1" ~> "d_1",
+
+      "w_2" ~> "x_2", "x_2" ~> "y_2", "y_2" ~> "z_2",
+      "w_3" ~> "x_3", "x_3" ~> "y_3", "y_3" ~> "z_3")
+    //    println(g)
+
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe)
+    //TODO: when the code settles down we can make sure this converges to the expected litteral
+    //    println
+    //    println(detdag)
+
+    assert(detdag.parse(g)(describe).isDefined, "should be able to parse itself")
+
+    val g2 = Graph("a" ~> "b", "b" ~> "c", "c" ~> "d")
+    assert(detdag.parse(g2)(describe).isDefined, "should be able to parse a similar but unseen string")
+
+    val g3 = Graph("w" ~> "x", "x" ~> "y", "y" ~> "z")
+    assert(detdag.parse(g3)(describe).isDefined, "should be able to parse a similar but unseen string")
+
+    val bad1 = Graph("a" ~> "b", "b" ~> "c", "c" ~> "a_1")
+
+    //    println(detdag.parse(bad1)(describe))
+
+    assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a string with a different patern")
+  }
+
   //TODO: some of these may need the learning code to be more sensitive to work
-  //TODO: repeated string pattern
-  //TODO: multiple disjoint concrete strings
 
   //TODO: branching trees
   //TODO: concrete trees
   //TODO: branching trees with some implicit associations (all the leaves have to be consistant)
 
-  //TODO: repeated dimonds
+  @Test
+  def learnRepeatedDimonds: Unit = {
+
+    //TODO need to figure out hyper edges to make these graph literals more concise
+    val g = Graph(
+      "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3",
+      "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2", "a_2" ~> "d_3", "d_3" ~> "a_3")
+    assert(g.isDirected)
+    assert(g.isAcyclic)
+    assert(g.isConnected)
+
+    //    println(g)
+
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe)
+    //TODO: when the code settles down we can make sure this converges to the expected litteral
+    println
+    println(detdag)
+
+    assert(detdag.parse(g)(describe).isDefined, "should be able to parse itself")
+
+    val g2 = Graph(
+      "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3", "a_3" ~> "b_4", "b_4" ~> "a_5",
+      "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2", "a_2" ~> "d_3", "d_3" ~> "a_3", "a_3" ~> "d_4", "d_4" ~> "a_5"
+      )
+    assert(detdag.parse(g2)(describe).isDefined, "should be able to parse a similar but unseen dag")
+
+    val bad1 = Graph(
+
+      "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3",
+      "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2")
+
+    //    println(detdag.parse(bad1)(describe))
+
+    assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a dag with a different patern")
+  }
+
   //TODO: concrete dags
   //TODO: branching dags
   //TODO: partly repeating dags

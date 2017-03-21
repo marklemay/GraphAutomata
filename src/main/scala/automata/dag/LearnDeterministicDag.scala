@@ -41,11 +41,16 @@ object LearnDeterministicDag {
     DagDfa(incoming, outgoing, fullMap.values.toSet)
   }
 
-  def greedyLearn[LABEL,A](
-    g: Graph[A, DiEdge])(
-      describe: A => LABEL): DagDfa[LABEL, Int,Int] = {
+  //TODO: this is an ehuastive thing, make it stop early for the greedy
+  def greedyLearn[LABEL, A](
+    g: Graph[A, DiEdge], time: Double = Double.PositiveInfinity)(
+      describe: A => LABEL): DagDfa[LABEL, Int, Int] = {
     require(g.isDirected)
     require(g.isAcyclic)
+
+    //TODO: some fancy scala way to do this?
+    val startTime = System.currentTimeMillis().toDouble / 1000.0
+    val endTime = startTime + time
 
     val base = prefixSuffixDfa(g)(describe).withIdIndex(g)(describe) //already minimized
 
@@ -55,20 +60,20 @@ object LearnDeterministicDag {
 
     var lowestSeenCost = knownCosts.values.last
 
-    while (!activeParents.isEmpty) {
+    while (!activeParents.isEmpty &&
+      (System.currentTimeMillis().toDouble / 1000.0) < endTime) {
       val cheapest = activeParents.minBy(knownCosts)
 
       if (knownCosts(cheapest) < lowestSeenCost) {
         println
         println("cost " + knownCosts(cheapest))
-//        println(cheapest.transitions.mkString("\n"))
-//        println(cheapest.roots)
+        //        println(cheapest.transitions.mkString("\n"))
+        //        println(cheapest.roots)
         println
         lowestSeenCost = knownCosts(cheapest)
       } else {
         print(".")
       }
-
 
       var newParents = Set[DagDfa[LABEL, Int, Int]]()
 
@@ -77,7 +82,6 @@ object LearnDeterministicDag {
         List(a, b) = pairs.toList
       ) {
 
-        
         val newDfa = cheapest.merge(a, b)(g)(describe).withIdIndex(g)(describe)
 
         if (!knownCosts.contains(newDfa)) {
