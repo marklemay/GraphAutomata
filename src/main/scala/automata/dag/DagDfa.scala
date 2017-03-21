@@ -60,10 +60,10 @@ case class DagDfa[LABEL, IN_ID, OUT_ID](
 
     val reverse = reverseGraph(g)
     
-    println
-    println(g)
-    println(reverse)
-    println
+//    println
+//    println(g)
+//    println(reverse)
+//    println
 
     val Some(inMap) = newInputTree.parse(g)(describeg(g)(describe))
     val Some(outMap) = newoutputTree.parse(reverse)(describeg(reverse)(describe))
