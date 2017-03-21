@@ -8,6 +8,8 @@ readme.md
 
 tests
 
+hook up to travis or jenkins
+
 property based tests
 
 so much clean up
