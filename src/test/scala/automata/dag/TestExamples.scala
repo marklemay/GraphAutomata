@@ -19,6 +19,7 @@ class TestExamples extends AssertionsForJUnit {
 
   /** allows us to concisely label graph nodes with prefixes */
   def describe(s: String) = s.split('_').head
+  //TODO, describe with primes
 
   @Test
   def learnTrivalString: Unit = {
@@ -178,8 +179,7 @@ class TestExamples extends AssertionsForJUnit {
 
     val g2 = Graph(
       "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3", "a_3" ~> "b_4", "b_4" ~> "a_5",
-      "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2", "a_2" ~> "d_3", "d_3" ~> "a_3", "a_3" ~> "d_4", "d_4" ~> "a_5"
-      )
+      "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2", "a_2" ~> "d_3", "d_3" ~> "a_3", "a_3" ~> "d_4", "d_4" ~> "a_5")
     assert(detdag.parse(g2)(describe).isDefined, "should be able to parse a similar but unseen dag")
 
     val bad1 = Graph(
@@ -192,8 +192,47 @@ class TestExamples extends AssertionsForJUnit {
     assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a dag with a different patern")
   }
 
+  @Test
+  def learnPartlyRepeatingDags: Unit = {
+
+    //TODO need to figure out hyper edges to make these graph literals more concise
+    val g = Graph(
+      "start_0" ~> "single_0", "single_0" ~> "end_0",
+      "start_0" ~> "..._0", "..._0" ~> "end_0",
+
+      "start_1" ~> "single_1", "single_1" ~> "end_1",
+      "start_1" ~> "..._1", "..._1" ~> "..._'1", "..._'1" ~> "end_1",
+
+      "start_2" ~> "single_2", "single_2" ~> "end_2",
+      "start_2" ~> "..._2", "..._2" ~> "..._'2", "..._'2" ~> "..._''2", "..._''2" ~> "end_2")
+    assert(g.isDirected)
+    assert(g.isAcyclic)
+
+    //    println(g)
+
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe)
+    //TODO: when the code settles down we can make sure this converges to the expected litteral
+    println
+    println(detdag)
+
+    assert(detdag.parse(g)(describe).isDefined, "should be able to parse itself")
+
+    val g2 = Graph(
+      "start" ~> "single", "single" ~> "end",
+      "start" ~> "...", "..." ~> "..._'", "..._'" ~> "..._''", "..._''" ~> "..._'''", "..._'''" ~> "end")
+    assert(detdag.parse(g2)(describe).isDefined, "should be able to parse a similar but unseen dag")
+
+    val bad1 = Graph(
+
+      "start" ~> "single", "single" ~> "single_'", "single_'" ~> "end",
+      "start" ~> "...", "..." ~> "..._'", "..._'" ~> "..._''", "..._''" ~> "end")
+
+    //    println(detdag.parse(bad1)(describe))
+
+    assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a dag with a different patern")
+  }
+
   //TODO: concrete dags
   //TODO: branching dags
-  //TODO: partly repeating dags
   //TODO: the 3 sat grammar for fun
 }
