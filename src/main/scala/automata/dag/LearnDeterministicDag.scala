@@ -53,13 +53,13 @@ object LearnDeterministicDag {
     val endTime = startTime + time
 
     val base = prefixSuffixDfa(g)(describe).withIdIndex(g)(describe) //already minimized
-
+    println("Done with Prefix Suffix DFA")
     var knownCosts = Map[DagDfa[LABEL, Int, Int], Double](base -> base.mdl(g)(describe))
 
     var activeParents = Set[DagDfa[LABEL, Int, Int]](base)
 
     var lowestSeenCost = knownCosts.values.last
-
+    println("Starting While Loop")
     while (!activeParents.isEmpty &&
       (System.currentTimeMillis().toDouble / 1000.0) < endTime) {
       val cheapest = activeParents.minBy(knownCosts)

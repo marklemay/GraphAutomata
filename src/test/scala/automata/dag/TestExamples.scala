@@ -1,24 +1,26 @@
 package automata.dag
+import neo4j_scala_graph.NeoData._
 import org.junit.Test
-import org.junit.Assert.assertTrue
-import scala.collection.immutable.MultiSet._
-import scala.collection.immutable.Bag //suprisingly important to be explicit about this
-import scalax.collection.Graph
-import scalax.collection.GraphEdge.DiEdge
-import automata.tree.TreeDfa
-import scalax.collection.edge.Implicits._
-import scalax.collection.GraphPredef._
-import scalax.collection.GraphEdge.DiEdge
-import scalax.collection.GraphPredef
-import automata.tree.LearnTreeAutomata
+import org.neo4j.driver.v1.{AuthTokens, GraphDatabase}
 import org.scalatest.junit.AssertionsForJUnit
-import org.scalatest.Ignore
+
+import scalax.collection.Graph
+import scalax.collection.GraphPredef._
 
 @Test
 class TestExamples extends AssertionsForJUnit {
 
   /** allows us to concisely label graph nodes with prefixes */
   def describe(s: String) = s.split('_').head
+  def describe(s: NeoData) = {
+    if (s.asInstanceOf[NeoNode].labels.head == "Artifact"){
+      s.asInstanceOf[NeoNode].properties.getOrElse("path", "none")
+    }
+    else if (s.asInstanceOf[NeoNode].labels.head == "Process"){
+      s.asInstanceOf[NeoNode].properties.getOrElse("name", "none")
+    }
+  }
+
   //TODO, describe with primes
 
   @Test
@@ -192,6 +194,27 @@ class TestExamples extends AssertionsForJUnit {
     assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a dag with a different patern")
   }
 
+  
+  @Test
+  def learnNeo4jOnlyActivities: Unit = {
+    println("wajih")
+    val driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "oldnew"))
+    println("wajihdone")
+    val session = driver.session();
+    val g = toDiGraph(run(session)("MATCH (n)-[r]-()  where n.type='Process' AND r.type='WasTriggeredBy' RETURN n,r;"))
+    println(LearnDeterministicDag.greedyLearn(g, 10)(describe))
+  }
+
+  @Test
+  def learnNeo4j: Unit = {
+    println("wajih")
+    val driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "oldnew"))
+    println("wajihdone")
+    val session = driver.session();
+    val g = toDiGraph(run(session)("MATCH (n)-[r]-() RETURN n,r;"))
+    println(LearnDeterministicDag.greedyLearn(g, 10)(describe))
+  }
+
   @Test
   def learnPartlyRepeatingDags: Unit = {
 
@@ -235,4 +258,5 @@ class TestExamples extends AssertionsForJUnit {
   //TODO: concrete dags
   //TODO: branching dags
   //TODO: the 3 sat grammar for fun
+
 }
