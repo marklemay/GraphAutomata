@@ -55,8 +55,8 @@ case class DagDfa[LABEL, IN_ID, OUT_ID](
     val (aIn, aOut) = a
     val (bIn, bOut) = b
 
-    val newInputTree = inputTree.toTreeNfa.merge(aIn, bIn)(aIn).toTreeDfa.minimize.withIntId
-    val newoutputTree = outputTree.toTreeNfa.merge(aOut, bOut)(aOut).toTreeDfa.minimize.withIntId
+    val newInputTree = inputTree.toTreeNfa.merge(aIn, bIn)(aIn).toTreeDfa.withIntId
+    val newoutputTree = outputTree.toTreeNfa.merge(aOut, bOut)(aOut).toTreeDfa.withIntId
 
     val reverse = reverseGraph(g)
     
