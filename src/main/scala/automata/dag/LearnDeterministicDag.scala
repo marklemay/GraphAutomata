@@ -81,9 +81,13 @@ object LearnDeterministicDag {
         pairs <- cheapest.okPairs.subsets(2);
         List(a, b) = pairs.toList
       ) {
+        
+        
+//        print("-")
 
         val newDfa = cheapest.merge(a, b)(g)(describe).withIdIndex(g)(describe)
 
+//        print("!")
         if (!knownCosts.contains(newDfa)) {
           knownCosts += (newDfa -> newDfa.mdl(g)(describe))
           newParents += newDfa

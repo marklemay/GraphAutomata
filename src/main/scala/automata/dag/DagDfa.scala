@@ -51,19 +51,24 @@ case class DagDfa[LABEL, IN_ID, OUT_ID](
 
   //TODO: merge
   //TODO: could in theory do a merge without  a re parse, it would probably be faster too
+  //TODO: rename merege with resprect to
   def merge[A](a: (IN_ID, OUT_ID), b: (IN_ID, OUT_ID))(g: Graph[A, DiEdge])(describe: A => LABEL): DagDfa[LABEL, _, _] = {
+    require(g.isDirected)
+    require(g.isAcyclic)
+
     val (aIn, aOut) = a
     val (bIn, bOut) = b
 
-    val newInputTree = inputTree.toTreeNfa.merge(aIn, bIn)(aIn).toTreeDfa.withIntId
-    val newoutputTree = outputTree.toTreeNfa.merge(aOut, bOut)(aOut).toTreeDfa.withIntId
-
-    val reverse = reverseGraph(g)
+    val newInputTree = inputTree.merge(aIn, bIn).withIntId
+    val newoutputTree = outputTree.merge(aOut, bOut).withIntId
     
+    //
+    val reverse = reverseGraph(g)
+
 //    println
 //    println(g)
-//    println(reverse)
-//    println
+    //    println(reverse)
+    //    println
 
     val Some(inMap) = newInputTree.parse(g)(describeg(g)(describe))
     val Some(outMap) = newoutputTree.parse(reverse)(describeg(reverse)(describe))

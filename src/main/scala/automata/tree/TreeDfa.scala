@@ -6,7 +6,7 @@ import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiEdge
 import TreeAutomata._
 
-//TODO: enforce minimal
+//TODO: enforce minimal?
 /** a minimal tree dfa representation, parsed from levaes to roots*/
 case class TreeDfa[LABEL, ID](transitions: Set[Transition[LABEL, ID]], override val roots: Set[ID]) extends TreeAutomata[LABEL, ID] {
   //    println
@@ -67,16 +67,58 @@ case class TreeDfa[LABEL, ID](transitions: Set[Transition[LABEL, ID]], override 
       }
     }
 
+    //TODO: check roots
+
     Some(map)
   }
 
-  //TODO: premote some of these to the trait
+  //TODO: premote some of these to the trait interface
 
-  //    //TODO: allow a parameter in the merging that tells how the new state should be iterperted
-  //    def merege(a: ID, b: ID): TreeNfa[LABEL, ID] = {
-  //
-  //      ???
-  //    }
+  def merge(a: ID, b: ID): TreeDfa[LABEL, ID] = {
+
+    def nonDeterministicMerge(trans: Set[Transition[LABEL, ID]], rs: Set[ID])(a: ID, b: ID): (Set[Transition[LABEL, ID]], Set[ID]) = {
+      val map = Map(a -> b).withDefault(identity)
+
+      (trans.map(_.mapId(map)), rs.map(map))
+    }
+
+    // don't need to find all the nondeterminism
+    def findFirstNonDeterminism(trans: Set[Transition[LABEL, ID]]): Option[(ID, ID)] = {
+      var seen = Map[(Bag[ID], LABEL), ID]()
+
+      //TODO: this search could be faster if informed by prevous merges
+      for (Transition(from, label, to) <- trans) {
+        val in = (from, label)
+
+        if (seen.contains(in)) {
+          return Some(seen(in), to)
+        } else {
+          seen += in -> to
+        }
+
+      }
+      return None
+    }
+
+    var (newTrans, newRoots) = nonDeterministicMerge(transitions, roots)(a, b)
+
+    var det = findFirstNonDeterminism(newTrans)
+
+    while (det.isDefined) {
+      val Some((x, y)) = det
+
+      val (newTrans1, newRoots1) = nonDeterministicMerge(newTrans, newRoots)(x, y)
+      newTrans = newTrans1 //TODO: there must be pretty syntax to do this
+      newRoots = newRoots1
+
+      det = findFirstNonDeterminism(newTrans)
+
+    }
+
+    //TODO: handle roots
+
+    TreeDfa(newTrans, newRoots)
+  }
 
   //TODO: again a big mess
   private def reachable: Set[Transition[LABEL, ID]] = {
@@ -113,24 +155,12 @@ case class TreeDfa[LABEL, ID](transitions: Set[Transition[LABEL, ID]], override 
     var oldPairs = Set[Set.Set2[ID]]()
     var pairs = terminal ++ nonTerminal
 
-    //      println
-    //      println(terminal)
-    //      println
-    //      println
-    //      println(nonTerminal)
-    //      println
-
     while (oldPairs != pairs) {
       oldPairs = pairs
       pairs = Set[Set.Set2[ID]]()
 
       //send every element to a representitive
       val oldMap = scala.collection.immutable.DisjointSets.mapToRepresentitive(oldPairs.map(_.toSet)).withDefault(identity)
-      //        println
-      //        println(ids.groupBy(oldMap).mkString("\n"))
-      //        println
-      //      //every transition under the equivelence
-      //      val oldtransitions = transitions.map(_.mapId(oldMap))
 
       //for every old pair, keep it if it is indistinguishable under the existing equivelence relation
       for (
@@ -138,22 +168,8 @@ case class TreeDfa[LABEL, ID](transitions: Set[Transition[LABEL, ID]], override 
         List(a, b) = pair.toList
       ) {
 
-        //                    val aTransitions = transitions.filter(_.from.contains(a)).map(_.mapId(oldMap))
-        //                    val bTransitions = transitions.filter(_.from.contains(b)).map(_.mapId(oldMap))
-        //                    
-
-        //                    val aTransitions = transitions.filter(_.from.contains(a)).map(_.mapId(oldMap)).map(_.to)
-        //                    val bTransitions = transitions.filter(_.from.contains(b)).map(_.mapId(oldMap)).map(_.to)
-
         val aTransitions = transitions.filter(_.to == a).map(_.mapId(oldMap))
         val bTransitions = transitions.filter(_.to == b).map(_.mapId(oldMap))
-
-        //          println
-        //          println(a)
-        //          println(aTransitions)
-        //          println(b)
-        //          println(bTransitions)
-        //          println
 
         if (aTransitions == bTransitions) {
           pairs += Set(a, b).toSet2
@@ -162,11 +178,6 @@ case class TreeDfa[LABEL, ID](transitions: Set[Transition[LABEL, ID]], override 
       }
 
     }
-
-    //
-    //      var distinguisable = pairs.map(p => p -> p.map(id => roots.contains(id))).toMap.mapValues(_.reduce(_ == _))
-    //
-    //      var dependsOn = pairs.map(p => p -> Set[Set.Set2[ID]]())
 
     val map = scala.collection.immutable.DisjointSets.mapToRepresentitive(oldPairs.map(_.toSet)).withDefault(identity)
 
