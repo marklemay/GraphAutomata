@@ -41,13 +41,15 @@ class TestNeoGraphs extends AssertionsForJUnit {
     val driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "n"))
     println("wajihdone")
     val session = driver.session();
-    val g = toDiGraph(run(session)("MATCH (n)-[r]-() RETURN n,r;"))
+    val g = runEncodeEdge(session)("MATCH (n)-[r]-() RETURN n,r;")
     //    println(g.mkString(sep)
     println(LearnDeterministicDag.greedyLearn(g, 120)(describe))
 
-    //cost 189.2011860696888
+    //cost 200.87493680912684
     //    it considers the rm, cat, touch to be the same.
-    //  Which is reasonable (the best interpertation?) given the topoloy of the graph
+    //  Which is reasonable given the topoloy of the graph
     //  they all use the same 3 files and where triggered by mystery users
+
+    // hmm, makes a lot of sense to combine rm, touch, but not sure why cat get's lumped in there?
   }
 }
