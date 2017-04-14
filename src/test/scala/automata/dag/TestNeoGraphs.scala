@@ -34,22 +34,24 @@ class TestNeoGraphs extends AssertionsForJUnit {
     println(LearnDeterministicDag.greedyLearn(g, 10)(describe))
   }
 
+  
+  // bigger graphs, may need to give the jvm needs more memory
   @Test
   def learnNeo4j: Unit = {
+    {
+      val mb = 1024*1024;
+      val run = Runtime.getRuntime();
+      println(run.totalMemory() / mb)
+    }
+    
+    
     println("wajih")
     // I REALLY hate how the prov arrows go in the opposite direction of cuasality, unlike literally everything ever.  who thought this was a good idea?
     val driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "n"))
     println("wajihdone")
     val session = driver.session();
-    val g = runEncodeEdge(session)("MATCH (n)-[r]-() RETURN n,r;")
+    val g = fullGraph(session)
     //    println(g.mkString(sep)
     println(LearnDeterministicDag.greedyLearn(g, 120)(describe))
-
-    //cost 200.87493680912684
-    //    it considers the rm, cat, touch to be the same.
-    //  Which is reasonable given the topoloy of the graph
-    //  they all use the same 3 files and where triggered by mystery users
-
-    // hmm, makes a lot of sense to combine rm, touch, but not sure why cat get's lumped in there?
   }
 }
