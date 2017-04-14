@@ -52,21 +52,48 @@ case class DagDfa[LABEL, IN_ID, OUT_ID](
   //TODO: merge
   //TODO: could in theory do a merge without  a re parse, it would probably be faster too
   //TODO: rename merege with resprect to
-  def merge[A](a: (IN_ID, OUT_ID), b: (IN_ID, OUT_ID))(g: Graph[A, DiEdge])(describe: A => LABEL): DagDfa[LABEL, _, _] = {
+  //TODO: We should profile this.  It still runs slower than I think it should.  
+  def merge[A](a: (IN_ID, OUT_ID), b: (IN_ID, OUT_ID))(g: Graph[A, DiEdge])(describe: A => LABEL): DagDfa[LABEL, IN_ID, OUT_ID] = {
     require(g.isDirected)
     require(g.isAcyclic)
 
     val (aIn, aOut) = a
     val (bIn, bOut) = b
 
-    val newInputTree = inputTree.merge(aIn, bIn).withIntId
-    val newoutputTree = outputTree.merge(aOut, bOut).withIntId
-    
+    val newInputTree = inputTree.merge(aIn, bIn) //.withIntId
+    val newoutputTree = outputTree.merge(aOut, bOut) //.withIntId
+
     //
     val reverse = reverseGraph(g)
 
-//    println
-//    println(g)
+    //    println
+    //    println(g)
+    //    println(reverse)
+    //    println
+
+    val Some(inMap) = newInputTree.parse(g)(describeg(g)(describe))
+    val Some(outMap) = newoutputTree.parse(reverse)(describeg(reverse)(describe))
+
+    val ins = inMap.map(p => p._1.value -> p._2)
+    val outs = outMap.map(p => p._1.value -> p._2)
+
+    val m = g.nodes.map(_.value).map(a => a -> (ins(a), outs(a))).toMap
+
+    DagDfa(newInputTree, newoutputTree, m.values.toSet)
+  }
+
+  def mergeFast[A](a: (IN_ID, OUT_ID), b: (IN_ID, OUT_ID))(g: Graph[A, DiEdge])(describe: A => LABEL): DagDfa[LABEL, IN_ID, OUT_ID] = {
+    val (aIn, aOut) = a
+    val (bIn, bOut) = b
+
+    val newInputTree = inputTree.merge(aIn, bIn) //.withIntId
+    val newoutputTree = outputTree.merge(aOut, bOut) //.withIntId
+
+    //
+    val reverse = reverseGraph(g)
+
+    //    println
+    //    println(g)
     //    println(reverse)
     //    println
 

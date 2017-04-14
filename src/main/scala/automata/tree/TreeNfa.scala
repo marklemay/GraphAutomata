@@ -21,6 +21,9 @@ case class TreeNfa[LABEL, ID](transitions: Set[Transition[LABEL, ID]], roots: Se
   override def mapId[NEW_ID](fId: ID => NEW_ID): TreeNfa[LABEL, NEW_ID] = map(identity, fId) //TODO: faster specialized?
 
   override def toTreeNfa = this
+  
+  
+  override def toFast:TreeDfaFast[LABEL] = ???
 
   // this is purely a convieniece method, more powerful merges can be achieveed through map
   //TODO: defualt parameter doesn;t exactly work?

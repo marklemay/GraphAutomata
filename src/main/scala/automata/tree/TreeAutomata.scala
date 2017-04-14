@@ -67,6 +67,7 @@ object TreeAutomata {
 
     //    def compressIDs: TreeDfa[LABEL, ID]
 
+    def toFast: TreeDfaFast[LABEL]
   }
 
 }

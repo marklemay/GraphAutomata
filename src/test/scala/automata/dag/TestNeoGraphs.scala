@@ -50,8 +50,11 @@ class TestNeoGraphs extends AssertionsForJUnit {
     val driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "n"))
     println("wajihdone")
     val session = driver.session();
+    
+    println("!!!!")
     val g = fullGraph(session)
     //    println(g.mkString(sep)
-    println(LearnDeterministicDag.greedyLearn(g, 120)(describe))
+    println("hmmm")
+    println(LearnDeterministicDag.greedyLearn(g, 60*20)(describe))
   }
 }

@@ -45,6 +45,13 @@ case class TreeDfa[LABEL, ID](transitions: Set[Transition[LABEL, ID]], override 
   override def mapLabel[NEW_LABEL](fLabel: LABEL => NEW_LABEL) = TreeDfa[NEW_LABEL, ID](transitions.map(_.map(fLabel, identity)), roots)
 
   override def toTreeNfa = TreeNfa(transitions, roots)
+  
+  
+  override def toFast:TreeDfaFast[LABEL] = {
+    val TreeDfa(tran, rs) = this.withIntId
+    
+    TreeDfaFast(tran)
+  }
 
   //TODO: require satisfiablility, non redundency
 
@@ -74,31 +81,32 @@ case class TreeDfa[LABEL, ID](transitions: Set[Transition[LABEL, ID]], override 
 
   //TODO: premote some of these to the trait interface
 
-  def merge(a: ID, b: ID): TreeDfa[LABEL, ID] = {
+  private def nonDeterministicMerge(trans: Set[Transition[LABEL, ID]], rs: Set[ID])(a: ID, b: ID): (Set[Transition[LABEL, ID]], Set[ID]) = {
+    val map = Map(a -> b).withDefault(identity)
 
-    def nonDeterministicMerge(trans: Set[Transition[LABEL, ID]], rs: Set[ID])(a: ID, b: ID): (Set[Transition[LABEL, ID]], Set[ID]) = {
-      val map = Map(a -> b).withDefault(identity)
+    (trans.map(_.mapId(map)), rs.map(map))
+  }
 
-      (trans.map(_.mapId(map)), rs.map(map))
-    }
+  // don't need to find all the nondeterminism
+  private def findFirstNonDeterminism(trans: Set[Transition[LABEL, ID]]): Option[(ID, ID)] = {
+    var seen = Map[(Bag[ID], LABEL), ID]()
 
-    // don't need to find all the nondeterminism
-    def findFirstNonDeterminism(trans: Set[Transition[LABEL, ID]]): Option[(ID, ID)] = {
-      var seen = Map[(Bag[ID], LABEL), ID]()
+    //TODO: this search could be faster if informed by prevous merges
+    for (Transition(from, label, to) <- trans) {
+      val in = (from, label)
 
-      //TODO: this search could be faster if informed by prevous merges
-      for (Transition(from, label, to) <- trans) {
-        val in = (from, label)
-
-        if (seen.contains(in)) {
-          return Some(seen(in), to)
-        } else {
-          seen += in -> to
-        }
-
+      if (seen.contains(in)) {
+        return Some(seen(in), to)
+      } else {
+        seen += in -> to
       }
-      return None
+
     }
+    return None
+  }
+
+  //TODO: also take an efficient order, choose the smaller of the 2, this will make the representations unique
+  def merge(a: ID, b: ID): TreeDfa[LABEL, ID] = {
 
     var (newTrans, newRoots) = nonDeterministicMerge(transitions, roots)(a, b)
 

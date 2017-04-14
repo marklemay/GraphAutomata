@@ -24,12 +24,12 @@ object LearnDeterministicDag {
     describe(n.value)
   }
 
-  def prefixSuffixDfa[LABEL, A](g: Graph[A, DiEdge])(describe: A => LABEL): DagDfa[LABEL, _, _] = {
+  def prefixSuffixDfa[LABEL, A](g: Graph[A, DiEdge])(describe: A => LABEL): DagDfaFast[LABEL] = {
 
     val rg = reverseGraph(g)
 
-    val incoming = LearnTreeAutomata.prefixDFA(g)(describeg(g)(describe))
-    val outgoing = LearnTreeAutomata.prefixDFA(rg)(describeg(rg)(describe))
+    val incoming = LearnTreeAutomata.prefixDFA(g)(describeg(g)(describe)).toFast
+    val outgoing = LearnTreeAutomata.prefixDFA(rg)(describeg(rg)(describe)).toFast
 
     val inMap = incoming.parse(g)(describeg(g)(describe)).get.map(p => p._1.value -> p._2)
     val outMap = outgoing.parse(rg)(describeg(rg)(describe)).get.map(p => p._1.value -> p._2)
@@ -38,13 +38,14 @@ object LearnDeterministicDag {
 
     val fullMap = inMap.keySet.map(k => k -> (inMap(k), outMap(k))).toMap
 
-    DagDfa(incoming, outgoing, fullMap.values.toSet)
+    DagDfaFast(incoming, outgoing, fullMap.values.toSet)
   }
 
+  private def meregeAll[A](a1:A,a2:A) = true
   //TODO: this is an ehuastive thing, make it stop early for the greedy
   def greedyLearn[LABEL, A](
-    g: Graph[A, DiEdge], time: Double = Double.PositiveInfinity)(
-      describe: A => LABEL): DagDfa[LABEL, Int, Int] = {
+    g: Graph[A, DiEdge], time: Double = Double.PositiveInfinity)( //, mergeHint:((A,A)=>Boolean) = meregeAll _ )(
+      describe: A => LABEL): DagDfaFast[LABEL] = {
     require(g.isDirected)
     require(g.isAcyclic)
 
@@ -52,11 +53,15 @@ object LearnDeterministicDag {
     val startTime = System.currentTimeMillis().toDouble / 1000.0
     val endTime = startTime + time
 
-    val base = prefixSuffixDfa(g)(describe).withIdIndex(g)(describe) //already minimized
-    println("Done with Prefix Suffix DFA")
-    var knownCosts = Map[DagDfa[LABEL, Int, Int], Double](base -> base.mdl(g)(describe))
+    println("...")
 
-    var activeParents = Set[DagDfa[LABEL, Int, Int]](base)
+    val base = prefixSuffixDfa(g)(describe)  //already minimized
+    
+                println(base)
+    println("Done with Prefix Suffix DFA")
+    var knownCosts = Map[DagDfaFast[LABEL], Double](base -> base.mdl(g)(describe))
+
+    var activeParents = Set[DagDfaFast[LABEL]](base) //TODO: should be a priority queue
 
     var lowestSeenCost = knownCosts.values.last
     println("Starting While Loop")
@@ -64,10 +69,12 @@ object LearnDeterministicDag {
       (System.currentTimeMillis().toDouble / 1000.0) < endTime) {
       val cheapest = activeParents.minBy(knownCosts)
 
+      println(s"there are ${cheapest.okPairs.size} nodes to merge")
+
       if (knownCosts(cheapest) < lowestSeenCost) {
         println
         println("cost " + knownCosts(cheapest))
-        //        println(cheapest.transitions.mkString("\n"))
+                println(cheapest)
         //        println(cheapest.roots)
         println
         lowestSeenCost = knownCosts(cheapest)
@@ -75,23 +82,24 @@ object LearnDeterministicDag {
         print(".")
       }
 
-      var newParents = Set[DagDfa[LABEL, Int, Int]]()
+      var newParents = Set[DagDfaFast[LABEL]]()
 
       for (
         pairs <- cheapest.okPairs.subsets(2);
         List(a, b) = pairs.toList
       ) {
-        
-        
+
 //        print("-")
 
-        val newDfa = cheapest.merge(a, b)(g)(describe).withIdIndex(g)(describe)
+        val newDfa = cheapest.merge(a, b)
 
 //        print("!")
         if (!knownCosts.contains(newDfa)) {
           knownCosts += (newDfa -> newDfa.mdl(g)(describe))
           newParents += newDfa
         }
+
+//        print("!")
 
       }
 
