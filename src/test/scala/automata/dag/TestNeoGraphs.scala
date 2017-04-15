@@ -29,6 +29,12 @@ class TestNeoGraphs extends AssertionsForJUnit {
 
   }
 
+  def describe_original(nd: NeoData): Desc = nd match {
+    case NeoNode(_, labels, prop) if labels == Set("Artifact") => Artifact(prop.getOrElse("path", "???").asInstanceOf[String])
+    case NeoNode(_, labels, prop) if labels == Set("Process") => Process(prop.getOrElse("name", "???").asInstanceOf[String]) //TODO: Option
+    case NeoRel(_, t, _) => EdgeDesc(t)
+  }
+
   @Ignore
   @Test
   def learnNeo4jOnlyActivities: Unit = {
