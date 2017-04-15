@@ -24,9 +24,7 @@ case class DagDfaFast[LABEL](
     //what can deduce about a node from its outputs
     outputTree: TreeDfaFast[LABEL],
 
-    //TODO: could make this even more restricted with Map[LABEL, (IN_ID, OUT_ID)]
     okPairs: Set[(Int, Int)]) {
-  
 
   def parse[A](g: Graph[A, DiEdge])(describe: A => LABEL): Option[Map[A, (Int, Int)]] = {
 
@@ -59,17 +57,25 @@ case class DagDfaFast[LABEL](
     val (newInputTree, inMap) = inputTree.merge(aIn, bIn)
     val (newoutputTree, outMap) = outputTree.merge(aOut, bOut)
 
-
     DagDfaFast(newInputTree, newoutputTree, okPairs.map(p => (inMap.getOrElse(p._1, p._1), outMap.getOrElse(p._2, p._2))))
+  }
+
+  lazy val languageDescriptionCost = {
+    okPairs.size * (log2(inputTree.ids.size.toDouble) + log2(outputTree.ids.size.toDouble))
+  }
+
+  def graphDescriptionCostGivenLanguage[A](g: Graph[A, DiEdge])(describe: A => LABEL): Double = {
+
+    val reverse = reverseGraph(g)
+
+    inputTree.mdl(g)(describeg(g)(describe)) + outputTree.mdl(reverse)(describeg(reverse)(describe))
   }
 
   //  TODO: mdl cost
   //for now keeping it simple with just the cost of the trees
   def mdl[A](g: Graph[A, DiEdge])(describe: A => LABEL): Double = {
 
-    val reverse = reverseGraph(g)
-
-    inputTree.mdl(g)(describeg(g)(describe)) + outputTree.mdl(reverse)(describeg(reverse)(describe)) + okPairs.size * (log2(inputTree.ids.size.toDouble) + log2(outputTree.ids.size.toDouble))
+    languageDescriptionCost + graphDescriptionCostGivenLanguage(g)(describe)
   }
 
 }

@@ -9,7 +9,6 @@ import scalax.collection.GraphEdge.DiEdge
 import scalax.collection.GraphPredef._
 import scala.collection.mutable.ListBuffer
 
-
 object LearnDeterministicDag {
   //TODO: there has got tp be a better way to do this
   def reverseGraph[A](g: Graph[A, DiEdge]): Graph[A, DiEdge] = {
@@ -17,47 +16,63 @@ object LearnDeterministicDag {
     Graph.from(g.nodes, es)
   }
 
-  def writeGrammar(dagdfa: DagDfaFast[_]) ={
+  def writeGrammar(dagdfa: DagDfaFast[_]) = {
     val fos = new FileOutputStream("graphGrammar.obj")
     val oos = new ObjectOutputStream(fos)
     oos.writeObject(dagdfa)
     oos.close
   }
 
-  def readGrammar(path: String) ={
+  def readGrammar(path: String) = {
     // If we have generated graph grammar previously can we update it with new graph ??
     // return
   }
 
-  def getAncestors[ID](id : ID, dagdfa: DagDfaFast[_]) = {
+  def getAncestors[ID](id: ID, dagdfa: DagDfaFast[_]) = {
     // return ancestors of this id
     // return
   }
 
-  def getDescendants[ID](id : ID,  dagdfa: DagDfaFast[_]) = {
+  def getDescendants[ID](id: ID, dagdfa: DagDfaFast[_]) = {
     // return descendants of this id
     // return
   }
 
-  def printStatistics(g: Graph[_,DiEdge], time_cost: ListBuffer[(Double,Double)], dagdfa: DagDfaFast[_] ) = {
-    val writer = new PrintWriter(new File("time_cost.csv" ))
+  def printStatistics[LABEL, A](g: Graph[A, DiEdge], time_cost: ListBuffer[(Double, Double)], dagdfa: DagDfaFast[LABEL])(describe: A => LABEL) = {
+    val writer = new PrintWriter(new File("time_cost.csv"))
     for ((time, cost) <- time_cost) {
-      writer.write(time.toString+", "+"%.3f".format(cost).toString+"\n")
+      writer.write(time.toString + ", " + "%.3f".format(cost).toString + "\n")
     }
+
+    //    just compute it again
+    val base = prefixSuffixDfa(g)(describe) //already minimized
+
     writer.close
     println
     println("=============Statistics==============")
     println
-    println("Initial Total Vertices: " + g.nodes.size.toString)
-    println("Initial Total Edges: " + g.edges.size.toString)
-    println("Initial MDL Cost: " + " -- ")
+    println(" graph Vertices: " + g.nodes.size)
+    println(" grapg node labels: " + g.nodes.map(n => describe(n)).size)
+    println(" grapg Edges: " + g.edges.size)
+    println
+
+    println("Initial total input rules: " + base.inputTree.transitions.size)
+    println("Initial total output rules: " + base.outputTree.transitions.size)
+    println("Initial estimated language Cost: " + base.languageDescriptionCost)
+    println("Initial estimated Cost given language: " + base.graphDescriptionCostGivenLanguage(g)(describe))
+    println("Initial estimated MDL Cost Total: " + base.mdl(g)(describe))
+    println("Initial destinguishable node types: " + base.okPairs.size)
     println("Initial Size in bytes: " + " -- ")
     println
-    println("Grammar Total Vertices: " + dagdfa.inputTree.transitions.size)
-    println("Grammar Total Edges: " + " -- ")
-    println("Grammar MDL Cost: " + " -- ")
-    println("Grammar Size in bytes: " + " -- ")
-    println("Grammar Nodes merged: " + " -- ")
+
+    println("Final total input rules: " + dagdfa.inputTree.transitions.size)
+    println("Final total output rules: " + dagdfa.outputTree.transitions.size)
+    println("Final estimated language Cost: " + dagdfa.languageDescriptionCost)
+    println("Final estimated Cost given language: " + dagdfa.graphDescriptionCostGivenLanguage(g)(describe))
+    println("Final estimated MDL Cost Total: " + dagdfa.mdl(g)(describe))
+    println("Final destinguishable node types: " + dagdfa.okPairs.size)
+    println("Final Size in bytes: " + " -- ")
+    println(" Nodes merged: " + (base.okPairs.size - dagdfa.okPairs.size))
     println
     println("=============Statistics==============")
   }
@@ -82,11 +97,11 @@ object LearnDeterministicDag {
     DagDfaFast(incoming, outgoing, fullMap.values.toSet)
   }
 
-  private def meregeAll[A](a1:A,a2:A) = true
+  private def meregeAll[A](a1: A, a2: A) = true
   //TODO: this is an ehuastive thing, make it stop early for the greedy
   def greedyLearn[LABEL, A](
     g: Graph[A, DiEdge], time: Double = Double.PositiveInfinity)( //, mergeHint:((A,A)=>Boolean) = meregeAll _ )(
-    describe: A => LABEL): DagDfaFast[LABEL] = {
+      describe: A => LABEL): DagDfaFast[LABEL] = {
     var time_cost = new ListBuffer[(Double, Double)]()
     require(g.isDirected)
     require(g.isAcyclic)
@@ -97,16 +112,16 @@ object LearnDeterministicDag {
     var timeLapsed = System.currentTimeMillis().toDouble
     println("...")
 
-    val base = prefixSuffixDfa(g)(describe)  //already minimized
-    
-                println(base)
+    val base = prefixSuffixDfa(g)(describe) //already minimized
+
+    println(base)
     println("Done with Prefix Suffix DFA")
     var knownCosts = Map[DagDfaFast[LABEL], Double](base -> base.mdl(g)(describe))
 
     var activeParents = Set[DagDfaFast[LABEL]](base) //TODO: should be a priority queue
 
     var lowestSeenCost = knownCosts.values.last
-    time_cost += (((System.currentTimeMillis().toDouble - timeLapsed) , lowestSeenCost))
+    time_cost += (((System.currentTimeMillis().toDouble - timeLapsed), lowestSeenCost))
     println("Starting While Loop")
     while (!activeParents.isEmpty &&
       (System.currentTimeMillis().toDouble / 1000.0) < endTime) {
@@ -117,7 +132,7 @@ object LearnDeterministicDag {
         println(s"there are ${cheapest.okPairs.size} nodes to merge")
         println
         println("cost " + knownCosts(cheapest))
-                println(cheapest)
+        println(cheapest)
         //        println(cheapest.roots)
         println
         lowestSeenCost = knownCosts(cheapest)
@@ -138,7 +153,7 @@ object LearnDeterministicDag {
       activeParents = (activeParents ++ newParents) - cheapest
     }
 
-    printStatistics(g,time_cost,knownCosts.minBy(_._2)._1)
+    printStatistics(g, time_cost, knownCosts.minBy(_._2)._1)(describe)
     knownCosts.minBy(_._2)._1
   }
 }
