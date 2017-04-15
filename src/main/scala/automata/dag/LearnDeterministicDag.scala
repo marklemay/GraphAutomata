@@ -16,6 +16,29 @@ object LearnDeterministicDag {
     val es = g.edges.map { case g.EdgeT(in, out) => (out.value ~> in.value) }
     Graph.from(g.nodes, es)
   }
+
+  def writeGrammar(dagdfa: DagDfaFast[_]) ={
+    val fos = new FileOutputStream("graphGrammar.obj")
+    val oos = new ObjectOutputStream(fos)
+    oos.writeObject(dagdfa)
+    oos.close
+  }
+
+  def readGrammar(path: String) ={
+    // If we have generated graph grammar previously can we update it with new graph ??
+    // return
+  }
+
+  def getAncestors[ID](id : ID, dagdfa: DagDfaFast[_]) = {
+    // return ancestors of this id
+    // return
+  }
+
+  def getDescendants[ID](id : ID,  dagdfa: DagDfaFast[_]) = {
+    // return descendants of this id
+    // return
+  }
+
   def printStatistics(g: Graph[_,DiEdge], time_cost: ListBuffer[(Double,Double)], dagdfa: DagDfaFast[_] ) = {
     val writer = new PrintWriter(new File("time_cost.csv" ))
     for ((time, cost) <- time_cost) {
@@ -34,6 +57,7 @@ object LearnDeterministicDag {
     println("Grammar Total Edges: " + " -- ")
     println("Grammar MDL Cost: " + " -- ")
     println("Grammar Size in bytes: " + " -- ")
+    println("Grammar Nodes merged: " + " -- ")
     println
     println("=============Statistics==============")
   }
