@@ -1,9 +1,7 @@
 package automata.dag
 
 import java.io._
-
 import automata.tree.LearnTreeAutomata
-
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiEdge
 import scalax.collection.GraphPredef._
@@ -74,6 +72,8 @@ object LearnDeterministicDag {
     println("Final Size in bytes: " + " -- ")
     println(" Nodes merged: " + (base.okPairs.size - dagdfa.okPairs.size))
     println
+    println("Time spent in parsing: " + " -- ")
+    println("Time spent in induction: " + " -- ")
     println("=============Statistics==============")
   }
   //TODO: there has got tp be a better way to do this
@@ -110,25 +110,29 @@ object LearnDeterministicDag {
     val startTime = System.currentTimeMillis().toDouble / 1000.0
     val endTime = startTime + time
     var timeLapsed = System.currentTimeMillis().toDouble
+
     println("...")
-
     val base = prefixSuffixDfa(g)(describe) //already minimized
-
     println(base)
     println("Done with Prefix Suffix DFA")
+
     var knownCosts = Map[DagDfaFast[LABEL], Double](base -> base.mdl(g)(describe))
-
     var activeParents = Set[DagDfaFast[LABEL]](base) //TODO: should be a priority queue
-
     var lowestSeenCost = knownCosts.values.last
-    time_cost += (((System.currentTimeMillis().toDouble - timeLapsed), lowestSeenCost))
+
+    time_cost += (((System.currentTimeMillis().toDouble - timeLapsed) / 1000.0 , lowestSeenCost))
+    var timer = System.currentTimeMillis().toDouble
     println("Starting While Loop")
     while (!activeParents.isEmpty &&
       (System.currentTimeMillis().toDouble / 1000.0) < endTime) {
       val cheapest = activeParents.minBy(knownCosts)
-
+      // Collect sample every xth second to see how mdl relate with time
+      if ((System.currentTimeMillis().toDouble - timer) > 10000){
+	time_cost += (((System.currentTimeMillis().toDouble - timeLapsed)/ 1000.0 -> lowestSeenCost))
+        timer = System.currentTimeMillis().toDouble
+      }
       if (knownCosts(cheapest) < lowestSeenCost) {
-        time_cost += (((System.currentTimeMillis().toDouble - timeLapsed) -> knownCosts(cheapest)))
+        time_cost += (((System.currentTimeMillis().toDouble - timeLapsed)/ 1000.0 -> knownCosts(cheapest)))
         println(s"there are ${cheapest.okPairs.size} nodes to merge")
         println
         println("cost " + knownCosts(cheapest))
