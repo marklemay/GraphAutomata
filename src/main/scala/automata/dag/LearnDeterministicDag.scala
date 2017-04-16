@@ -34,43 +34,31 @@ object LearnDeterministicDag {
     for ((time, cost) <- time_cost) {
       writer.write(time.toString + ", " + "%.3f".format(cost).toString + "\n")
     }
-
-    //    just compute it again
-    val base = prefixSuffixDfa(g)(describe_original) //already minimized
     writer.close
-    println
-    println("=============Statistics==============")
-    println
-    println("Graph Vertices: " + g.nodes.size)
-    println("Graph node labels: " + g.nodes.map(n => describe_original(n)).size)
-    println("Graph Edges: " + g.edges.size)
-    println
-    println("Initial total input rules: " + base.inputTree.transitions.size)
-    println("Initial total output rules: " + base.outputTree.transitions.size)
-    println("Initial estimated language Cost: " + base.languageDescriptionCost)
-    println("Initial estimated Cost given language: " + base.graphDescriptionCostGivenLanguage(g)(describe))
-    println("Initial estimated MDL Cost Total: " + base.mdl(g)(describe_original))
-    println("Initial destinguishable node types: " + base.okPairs.size)
-    println("Initial Size in bytes: " + " -- ")
-    println
-    println("Final total input rules: " + dagdfa.inputTree.transitions.size)
-    println("Final total output rules: " + dagdfa.outputTree.transitions.size)
-    println("Final estimated language Cost: " + dagdfa.languageDescriptionCost)
-    println("Final estimated Cost given language: " + dagdfa.graphDescriptionCostGivenLanguage(g)(describe))
-    println("Final estimated MDL Cost Total: " + dagdfa.mdl(g)(describe) + " bits")
-    println("Final destinguishable node types: " + dagdfa.okPairs.size)
-    println("Final Size in bytes: " + " -- ")
-    println("Nodes merged: " + (base.okPairs.size - dagdfa.okPairs.size))
-    println("Final Graph Vertices: "  + dagdfa.inputTree.transitions.size)
-    println("Final Graph Edges: " + getEdges(dagdfa))
-    // I need parsing time invoked for other graphs. Maybe from outside. So I think it
-    // it should be better to wrap function parse with time
-    // val startTime = System.currentTimeMillis().toDouble / 1000.0
-    // dagdfa.parse(g)(describe) // you may want to instead parse it on other graphs, but it will always parse fast and linear 
-    // val endime = System.currentTimeMillis().toDouble / 1000.0
-    println("Time to parse: " )
-    println("Time spent in induction: " + " -- ")
-    println("=============Statistics==============")
+    val writer2 = new PrintWriter(new File("stats.csv"))
+    val base = prefixSuffixDfa(g)(describe_original) //already minimized
+    writer2.write("i-graph-vertices," + g.nodes.size + "\n" )
+    writer2.write("i-graph-labels," + g.nodes.map(n => describe_original(n)).size + "\n")
+    writer2.write("i-graph-edges," + g.edges.size+ "\n")
+    writer2.write("i-graph-input-rules," + base.inputTree.transitions.size + "\n")
+    writer2.write("i-graph-output-rules," + base.outputTree.transitions.size + "\n")
+    writer2.write("i-lang-cost," + base.languageDescriptionCost + "\n")
+    writer2.write("i-lang-cost-given," + base.graphDescriptionCostGivenLanguage(g)(describe)+ "\n")
+    writer2.write("i-mdl," + base.mdl(g)(describe_original)+ "\n")
+    writer2.write("i-dist-nodes," + base.okPairs.size+ "\n")
+
+    writer2.write("f-graph-vertices,"  + dagdfa.inputTree.transitions.size+ "\n")
+    writer2.write("f-graph-edges," + getEdges(dagdfa)+ "\n")
+    writer2.write("f-graph-input-rules," + dagdfa.inputTree.transitions.size+ "\n")
+    writer2.write("f-graph-output-rules," + dagdfa.outputTree.transitions.size+ "\n")
+    writer2.write("f-lang-cost," + dagdfa.languageDescriptionCost+ "\n")
+    writer2.write("f-lang-cost-given," + dagdfa.graphDescriptionCostGivenLanguage(g)(describe)+ "\n")
+    writer2.write("f-mdl," + dagdfa.mdl(g)(describe) +"\n")
+    writer2.write("f-dist-nodes," + dagdfa.okPairs.size+ "\n")
+    writer2.write("f-nodes-merged," + (base.okPairs.size - dagdfa.okPairs.size)+ "\n")
+    writer2.close
+    // writer2.write("Time to parse: " + "\n")
+    // writer2.write("Time spent in induction: " + " -- "+ "\n")
   }
   //TODO: there has got tp be a better way to do this
   def describeg[A, LABEL](g: Graph[A, DiEdge])(describe: A => LABEL)(n: g.NodeT): LABEL = {

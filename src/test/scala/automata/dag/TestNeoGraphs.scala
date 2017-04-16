@@ -1,11 +1,16 @@
 package automata.dag
+import java.io._
 import neo4j_scala_graph.NeoData._
 import org.neo4j.driver.v1.{ AuthTokens, GraphDatabase }
 import org.junit.Test
 import org.scalatest.junit.AssertionsForJUnit
-
+import automata.tree.TreeAutomata._
 import scalax.collection.Graph
-import scalax.collection.GraphPredef._
+import scalax.collection.GraphPredef._, scalax.collection.GraphEdge._
+import scalax.collection.edge.LDiEdge // labeled directed edge
+import scalax.collection.edge.Implicits._ // shortcuts
+import org.neo4j.driver.v1.StatementResult
+
 import org.junit.Ignore
 
 class TestNeoGraphs extends AssertionsForJUnit {
@@ -15,6 +20,51 @@ class TestNeoGraphs extends AssertionsForJUnit {
   case class Process(name: String) extends Desc
 
   case class EdgeDesc(t: String) extends Desc
+
+  def writeGraphInitial(g: Graph[NeoData, DiEdge]) = {
+    val fos = new FileOutputStream("initialgraph.obj")
+    val oos = new ObjectOutputStream(fos)
+    oos.writeObject(g)
+    oos.close
+  }
+
+  def writeGraphFinal(g: Graph[NeoData, DiEdge]) = {
+    val fos = new FileOutputStream("finalgraph.obj")
+    val oos = new ObjectOutputStream(fos)
+    oos.writeObject(g)
+    oos.close
+  }
+
+  def createGraphFromDag(dagdfa: DagDfaFast[_]) : Graph[NeoData, DiEdge] = {
+    val list_trans = dagdfa.inputTree.transitions
+    println(list_trans)
+    var idtoLabel = Map[Int, Set[String]]()
+    var g = Graph[NeoData, DiEdge]()
+    for ( li <- list_trans){
+      if( li.label.isInstanceOf[Artifact]) {
+        idtoLabel += li.to -> Set("Artifact")
+      }
+      if( li.label.isInstanceOf[Process]) {
+        idtoLabel += li.to -> Set("Process")
+      }
+    }
+    var nodes = Set[NeoData]()
+    var edges = Set[DiEdge[NeoNode]]()
+    for ( item <- list_trans){
+      var node = NeoNode(item.to, idtoLabel(item.to), Map())
+      // var node = NeoNode(item.to, Set("???"), Map())
+      nodes += node
+      for ( ances <- item.from){
+        var node_2 = NeoNode(ances, idtoLabel(item.to), Map())
+        nodes += node_2
+        edges += node_2 ~> node
+      }
+    }
+    for (edge <- edges){
+      g += edge
+    }
+    return g
+  }
 
   def describe(nd: NeoData): Desc = nd match {
     case NeoNode(_, labels, prop) if labels == Set("Artifact") => {
@@ -76,13 +126,17 @@ class TestNeoGraphs extends AssertionsForJUnit {
     
     println("!!!!")
     val g = fullGraph(session)
-    // println(g)
+    writeGraph1(g)
     println("result")
     //    println(g.mkString(sep)
     println("hmmm")
     val dfa = LearnDeterministicDag.greedyLearn(g, 20)(describe, describe_original)
-    println(dfa)
-    val ids=dfa.getpossibleIds(Process("ftpbench"))
-    dfa.getDescendants(ids.head._1)
+    // println(dfa)
+    // val ggg = createGraphFromDag(dfa)
+    // println("+++++++++++++++++")
+    // println(ggg)
+    // writeGraph2(ggg)
+    // val ids=dfa.getpossibleIds(Process("ftpbench"))
+    // dfa.getDescendants(ids.head._1)
   }
 }
