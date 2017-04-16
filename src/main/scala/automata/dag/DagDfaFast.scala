@@ -15,7 +15,7 @@ import automata.tree.TreeAutomata.log2
 
 //TODO: not thrilled with this name
 /**
- * a dag grammar such that  each node is completely characterized by it's visible inpt and its visable output
+ * defines a "dag grammar" such that  each node is completely characterized by it's visible inpt and its visable output
  *  this is achieved by an input and output tree automata *
  */
 case class DagDfaFast[LABEL](
@@ -24,6 +24,7 @@ case class DagDfaFast[LABEL](
     //what can deduce about a node from its outputs
     outputTree: TreeDfaFast[LABEL],
 
+    //TODO: rename to nodeTypes?  it's good to think of these as the "type" of node, a label can belong to multiple types with additional conditions on input and output.
     okPairs: Set[(Int, Int)]) {
 
   def parse[A](g: Graph[A, DiEdge])(describe: A => LABEL): Option[Map[A, (Int, Int)]] = {
@@ -60,6 +61,8 @@ case class DagDfaFast[LABEL](
     DagDfaFast(newInputTree, newoutputTree, okPairs.map(p => (inMap.getOrElse(p._1, p._1), outMap.getOrElse(p._2, p._2))))
   }
 
+  //TODO: something like these should also be in the DagDfa class
+
   lazy val languageDescriptionCost = {
     okPairs.size * (log2(inputTree.ids.size.toDouble) + log2(outputTree.ids.size.toDouble))
   }
@@ -71,11 +74,55 @@ case class DagDfaFast[LABEL](
     inputTree.mdl(g)(describeg(g)(describe)) + outputTree.mdl(reverse)(describeg(reverse)(describe))
   }
 
-  //  TODO: mdl cost
   //for now keeping it simple with just the cost of the trees
   def mdl[A](g: Graph[A, DiEdge])(describe: A => LABEL): Double = {
 
     languageDescriptionCost + graphDescriptionCostGivenLanguage(g)(describe)
   }
+
+  /** returns the the different node types that can use this label */
+  def getpossibleIds(label: LABEL): Set[(Int, Int)] = {
+
+    val allLabelInIds = inputTree.transitions.filter(_.label == label).map(_.to)
+    val allLabelOutIds = outputTree.transitions.filter(_.label == label).map(_.to)
+
+    for (
+      (in, out) <- okPairs if allLabelInIds.contains(in) && allLabelOutIds.contains(out)
+    ) yield (in, out)
+  }
+
+  def getAncestors(inId: Int): Set[Int] = {
+    //    all posible ansestors of a given ID (even when additional Id may also necisarily be created)
+
+    //does scala really not have fixed point operator?
+    //TODO: should probably live in the tree code?
+    var reachableIds = Set[Int]()
+
+    var newReachable = inputTree.transitions.filter(t => !t.from.toSet.intersect(reachableIds + inId).isEmpty).map(_.to)
+
+    while (reachableIds != newReachable) {
+      reachableIds = newReachable
+      newReachable = inputTree.transitions.filter(t => !t.from.toSet.intersect(reachableIds + inId).isEmpty).map(_.to)
+    }
+
+    newReachable
+  }
+
+  def getDescendants(outId: Int) = {
+    var reachableIds = Set[Int]()
+
+    var newReachable = outputTree.transitions.filter(t => !t.from.toSet.intersect(reachableIds + outId).isEmpty).map(_.to)
+
+    while (reachableIds != newReachable) {
+      reachableIds = newReachable
+      newReachable = outputTree.transitions.filter(t => !t.from.toSet.intersect(reachableIds + outId).isEmpty).map(_.to)
+    }
+
+    newReachable
+  }
+
+  
+  /** creates a minimally more general grammar such that g is paresable */
+  def augment[A](g: Graph[A, DiEdge])(describe: A => LABEL):  DagDfaFast[LABEL] = ???
 
 }

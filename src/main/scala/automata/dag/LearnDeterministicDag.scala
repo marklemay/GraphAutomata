@@ -21,21 +21,6 @@ object LearnDeterministicDag {
     oos.close
   }
 
-  def readGrammar(path: String) = {
-    // If we have generated graph grammar previously can we update it with new graph ??
-    // return
-  }
-
-  def getAncestors[ID](id: ID, dagdfa: DagDfaFast[_]) = {
-    // return ancestors of this id
-    // return
-  }
-
-  def getDescendants[ID](id: ID, dagdfa: DagDfaFast[_]) = {
-    // return descendants of this id
-    // return
-  }
-
   def printStatistics[LABEL, A](g: Graph[A, DiEdge], time_cost: ListBuffer[(Double, Double)], dagdfa: DagDfaFast[LABEL])(describe: A => LABEL) = {
     val writer = new PrintWriter(new File("time_cost.csv"))
     for ((time, cost) <- time_cost) {
@@ -67,12 +52,19 @@ object LearnDeterministicDag {
     println("Final total output rules: " + dagdfa.outputTree.transitions.size)
     println("Final estimated language Cost: " + dagdfa.languageDescriptionCost)
     println("Final estimated Cost given language: " + dagdfa.graphDescriptionCostGivenLanguage(g)(describe))
-    println("Final estimated MDL Cost Total: " + dagdfa.mdl(g)(describe))
+    println("Final estimated MDL Cost Total: " + dagdfa.mdl(g)(describe) + " bits")
     println("Final destinguishable node types: " + dagdfa.okPairs.size)
     println("Final Size in bytes: " + " -- ")
     println(" Nodes merged: " + (base.okPairs.size - dagdfa.okPairs.size))
     println
-    println("Time spent in parsing: " + " -- ")
+    
+    
+    val startTime = System.currentTimeMillis().toDouble / 1000.0
+    dagdfa.parse(g)(describe) // you may want to instead parse it on other graphs, but it will always parse fast and linear 
+    val endime = System.currentTimeMillis().toDouble / 1000.0
+    
+    
+    println("Time to parse: " + (endime-startTime))
     println("Time spent in induction: " + " -- ")
     println("=============Statistics==============")
   }
@@ -120,19 +112,21 @@ object LearnDeterministicDag {
     var activeParents = Set[DagDfaFast[LABEL]](base) //TODO: should be a priority queue
     var lowestSeenCost = knownCosts.values.last
 
-    time_cost += (((System.currentTimeMillis().toDouble - timeLapsed) / 1000.0 , lowestSeenCost))
+    time_cost += (((System.currentTimeMillis().toDouble - timeLapsed) / 1000.0, lowestSeenCost))
     var timer = System.currentTimeMillis().toDouble
     println("Starting While Loop")
     while (!activeParents.isEmpty &&
       (System.currentTimeMillis().toDouble / 1000.0) < endTime) {
       val cheapest = activeParents.minBy(knownCosts)
+      
       // Collect sample every xth second to see how mdl relate with time
-      if ((System.currentTimeMillis().toDouble - timer) > 10000){
-	time_cost += (((System.currentTimeMillis().toDouble - timeLapsed)/ 1000.0 -> lowestSeenCost))
+      if ((System.currentTimeMillis().toDouble - timer) > 10000) {
+        time_cost += (((System.currentTimeMillis().toDouble - timeLapsed) / 1000.0 -> lowestSeenCost))
         timer = System.currentTimeMillis().toDouble
       }
+
       if (knownCosts(cheapest) < lowestSeenCost) {
-        time_cost += (((System.currentTimeMillis().toDouble - timeLapsed)/ 1000.0 -> knownCosts(cheapest)))
+        time_cost += (((System.currentTimeMillis().toDouble - timeLapsed) / 1000.0 -> knownCosts(cheapest)))
         println(s"there are ${cheapest.okPairs.size} nodes to merge")
         println
         println("cost " + knownCosts(cheapest))
