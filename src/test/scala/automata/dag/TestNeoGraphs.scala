@@ -19,9 +19,17 @@ class TestNeoGraphs extends AssertionsForJUnit {
   def describe(nd: NeoData): Desc = nd match {
     case NeoNode(_, labels, prop) if labels == Set("Artifact") => {
       val path=prop.getOrElse("path", "").asInstanceOf[String]
-      // if (path.startsWith("/usr/lib")){
-      //   return Artifact(path)
-      // }
+      if (path.startsWith("/usr/lib")){
+        return Artifact("/usr/lib/")
+      }else if (path.startsWith("/etc/")){
+        return Artifact("/etc/")
+      }else if (path.startsWith("/home/")){
+        return Artifact("/home/")
+      }else if (path.startsWith("/usr/bin")){
+        return Artifact("/usr/bin/")
+      }else if (path.startsWith("/usr/share")){
+        return Artifact("/usr/share/")
+      }
       return Artifact("")
     }
     case NeoNode(_, labels, prop) if labels == Set("Process") => {
