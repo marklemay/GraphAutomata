@@ -72,7 +72,7 @@ class TestNeoGraphs extends AssertionsForJUnit {
     println("result")
     //    println(g.mkString(sep)
     println("hmmm")
-    val dfa = LearnDeterministicDag.greedyLearn(g, 120)(describe, describe_original)
+    val dfa = LearnDeterministicDag.greedyLearn(g, 20)(describe, describe_original)
     println(dfa)
     val ids=dfa.getpossibleIds(Process("ftpbench"))
     dfa.getDescendants(ids.head._1)

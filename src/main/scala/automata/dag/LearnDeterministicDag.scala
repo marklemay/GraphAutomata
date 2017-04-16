@@ -20,6 +20,14 @@ object LearnDeterministicDag {
     oos.writeObject(dagdfa)
     oos.close
   }
+  def getEdges(dagdfa: DagDfaFast[_]): Int = {
+    val my_set = dagdfa.inputTree.transitions
+    var sum = 0
+    for ( set <- my_set){
+      sum += set.from.size
+    }
+    return sum
+  }
 
   def printStatistics[LABEL, A](g: Graph[A, DiEdge], time_cost: ListBuffer[(Double, Double)], dagdfa: DagDfaFast[LABEL])(describe: A => LABEL,describe_original: A => LABEL) = {
     val writer = new PrintWriter(new File("time_cost.csv"))
@@ -29,16 +37,14 @@ object LearnDeterministicDag {
 
     //    just compute it again
     val base = prefixSuffixDfa(g)(describe_original) //already minimized
-
     writer.close
     println
     println("=============Statistics==============")
     println
-    println(" graph Vertices: " + g.nodes.size)
-    println(" grapg node labels: " + g.nodes.map(n => describe_original(n)).size)
-    println(" grapg Edges: " + g.edges.size)
+    println("Graph Vertices: " + g.nodes.size)
+    println("Graph node labels: " + g.nodes.map(n => describe_original(n)).size)
+    println("Graph Edges: " + g.edges.size)
     println
-
     println("Initial total input rules: " + base.inputTree.transitions.size)
     println("Initial total output rules: " + base.outputTree.transitions.size)
     println("Initial estimated language Cost: " + base.languageDescriptionCost)
@@ -47,7 +53,6 @@ object LearnDeterministicDag {
     println("Initial destinguishable node types: " + base.okPairs.size)
     println("Initial Size in bytes: " + " -- ")
     println
-
     println("Final total input rules: " + dagdfa.inputTree.transitions.size)
     println("Final total output rules: " + dagdfa.outputTree.transitions.size)
     println("Final estimated language Cost: " + dagdfa.languageDescriptionCost)
@@ -55,9 +60,9 @@ object LearnDeterministicDag {
     println("Final estimated MDL Cost Total: " + dagdfa.mdl(g)(describe) + " bits")
     println("Final destinguishable node types: " + dagdfa.okPairs.size)
     println("Final Size in bytes: " + " -- ")
-    println(" Nodes merged: " + (base.okPairs.size - dagdfa.okPairs.size))
-    println
-    
+    println("Nodes merged: " + (base.okPairs.size - dagdfa.okPairs.size))
+    println("Final Graph Vertices: "  + dagdfa.inputTree.transitions.size)
+    println("Final Graph Edges: " + getEdges(dagdfa))
     // I need parsing time invoked for other graphs. Maybe from outside. So I think it
     // it should be better to wrap function parse with time
     // val startTime = System.currentTimeMillis().toDouble / 1000.0

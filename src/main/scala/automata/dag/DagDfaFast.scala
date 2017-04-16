@@ -30,7 +30,7 @@ case class DagDfaFast[LABEL](
   def parse[A](g: Graph[A, DiEdge])(describe: A => LABEL): Option[Map[A, (Int, Int)]] = {
 
     val reverse = reverseGraph(g)
-
+    val startTime = System.currentTimeMillis().toDouble
     (inputTree.parse(g)(describeg(g)(describe)), outputTree.parse(reverse)(describeg(reverse)(describe))) match {
       case (Some(inMap), Some(outMap)) => {
         val ins = inMap.map(p => p._1.value -> p._2)
@@ -46,6 +46,7 @@ case class DagDfaFast[LABEL](
       }
       case _ => None
     }
+    // How to end time here in scala ??
   }
 
   //TODO: could in theory do a merge without  a re parse, it would probably be faster too
