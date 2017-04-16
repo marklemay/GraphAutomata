@@ -21,21 +21,21 @@ object LearnDeterministicDag {
     oos.close
   }
 
-  def printStatistics[LABEL, A](g: Graph[A, DiEdge], time_cost: ListBuffer[(Double, Double)], dagdfa: DagDfaFast[LABEL])(describe: A => LABEL) = {
+  def printStatistics[LABEL, A](g: Graph[A, DiEdge], time_cost: ListBuffer[(Double, Double)], dagdfa: DagDfaFast[LABEL])(describe: A => LABEL,describe_original: A => LABEL) = {
     val writer = new PrintWriter(new File("time_cost.csv"))
     for ((time, cost) <- time_cost) {
       writer.write(time.toString + ", " + "%.3f".format(cost).toString + "\n")
     }
 
     //    just compute it again
-    val base = prefixSuffixDfa(g)(describe) //already minimized
+    val base = prefixSuffixDfa(g)(describe_original) //already minimized
 
     writer.close
     println
     println("=============Statistics==============")
     println
     println(" graph Vertices: " + g.nodes.size)
-    println(" grapg node labels: " + g.nodes.map(n => describe(n)).size)
+    println(" grapg node labels: " + g.nodes.map(n => describe_original(n)).size)
     println(" grapg Edges: " + g.edges.size)
     println
 
@@ -43,7 +43,7 @@ object LearnDeterministicDag {
     println("Initial total output rules: " + base.outputTree.transitions.size)
     println("Initial estimated language Cost: " + base.languageDescriptionCost)
     println("Initial estimated Cost given language: " + base.graphDescriptionCostGivenLanguage(g)(describe))
-    println("Initial estimated MDL Cost Total: " + base.mdl(g)(describe))
+    println("Initial estimated MDL Cost Total: " + base.mdl(g)(describe_original))
     println("Initial destinguishable node types: " + base.okPairs.size)
     println("Initial Size in bytes: " + " -- ")
     println
@@ -58,13 +58,12 @@ object LearnDeterministicDag {
     println(" Nodes merged: " + (base.okPairs.size - dagdfa.okPairs.size))
     println
     
-    
-    val startTime = System.currentTimeMillis().toDouble / 1000.0
-    dagdfa.parse(g)(describe) // you may want to instead parse it on other graphs, but it will always parse fast and linear 
-    val endime = System.currentTimeMillis().toDouble / 1000.0
-    
-    
-    println("Time to parse: " + (endime-startTime))
+    // I need parsing time invoked for other graphs. Maybe from outside. So I think it
+    // it should be better to wrap function parse with time
+    // val startTime = System.currentTimeMillis().toDouble / 1000.0
+    // dagdfa.parse(g)(describe) // you may want to instead parse it on other graphs, but it will always parse fast and linear 
+    // val endime = System.currentTimeMillis().toDouble / 1000.0
+    println("Time to parse: " )
     println("Time spent in induction: " + " -- ")
     println("=============Statistics==============")
   }
@@ -93,7 +92,7 @@ object LearnDeterministicDag {
   //TODO: this is an ehuastive thing, make it stop early for the greedy
   def greedyLearn[LABEL, A](
     g: Graph[A, DiEdge], time: Double = Double.PositiveInfinity)( //, mergeHint:((A,A)=>Boolean) = meregeAll _ )(
-      describe: A => LABEL): DagDfaFast[LABEL] = {
+      describe: A => LABEL, describe_original: A => LABEL): DagDfaFast[LABEL] = {
     var time_cost = new ListBuffer[(Double, Double)]()
     require(g.isDirected)
     require(g.isAcyclic)
@@ -151,7 +150,7 @@ object LearnDeterministicDag {
       activeParents = (activeParents ++ newParents) - cheapest
     }
 
-    printStatistics(g, time_cost, knownCosts.minBy(_._2)._1)(describe)
+    printStatistics(g, time_cost, knownCosts.minBy(_._2)._1)(describe,describe_original)
     knownCosts.minBy(_._2)._1
   }
 }

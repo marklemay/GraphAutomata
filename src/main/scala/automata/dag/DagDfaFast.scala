@@ -96,6 +96,7 @@ case class DagDfaFast[LABEL](
 
     //does scala really not have fixed point operator?
     //TODO: should probably live in the tree code?
+    val startTime = System.currentTimeMillis().toDouble
     var reachableIds = Set[Int]()
 
     var newReachable = inputTree.transitions.filter(t => !t.from.toSet.intersect(reachableIds + inId).isEmpty).map(_.to)
@@ -104,20 +105,22 @@ case class DagDfaFast[LABEL](
       reachableIds = newReachable
       newReachable = inputTree.transitions.filter(t => !t.from.toSet.intersect(reachableIds + inId).isEmpty).map(_.to)
     }
-
+    val endTime = System.currentTimeMillis().toDouble
+    println("Time to get ancestors: "  + (endTime-startTime))
     newReachable
   }
 
   def getDescendants(outId: Int) = {
     var reachableIds = Set[Int]()
-
+    val startTime = System.currentTimeMillis().toDouble
     var newReachable = outputTree.transitions.filter(t => !t.from.toSet.intersect(reachableIds + outId).isEmpty).map(_.to)
 
     while (reachableIds != newReachable) {
       reachableIds = newReachable
       newReachable = outputTree.transitions.filter(t => !t.from.toSet.intersect(reachableIds + outId).isEmpty).map(_.to)
     }
-
+    val endTime = System.currentTimeMillis().toDouble
+    println("Time to get descendants: "  + (endTime-startTime))
     newReachable
   }
 

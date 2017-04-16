@@ -33,7 +33,7 @@ class TestExamples extends AssertionsForJUnit {
       "a_2_0" ~> "a_2_1", "a_2_1" ~> "a_2_2", "a_2_2" ~> "a_2_3")
     //    println(g)
 
-    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe)
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe,describe)
     //    println(detdag)
 
     assert(detdag.parse(g)(describe).isDefined, "should be able to parse itself")
@@ -59,7 +59,7 @@ class TestExamples extends AssertionsForJUnit {
       "a_4" ~> "b_4", "b_4" ~> "c_4", "c_4" ~> "d_4")
     //    println(g)
 
-    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe)
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe,describe)
     //TODO: when the code settles down we can make sure this converges to the expected litteral
     //    println
     //    println(detdag)
@@ -90,7 +90,7 @@ class TestExamples extends AssertionsForJUnit {
     assert(g.isConnected)
     //    println(g)
 
-    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe)
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe,describe)
     //TODO: when the code settles down we can make sure this converges to the expected litteral
     //    println
     //    println(detdag)
@@ -131,7 +131,7 @@ class TestExamples extends AssertionsForJUnit {
       "w_3" ~> "x_3", "x_3" ~> "y_3", "y_3" ~> "z_3")
     //    println(g)
 
-    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe)
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe,describe)
     //TODO: when the code settles down we can make sure this converges to the expected litteral
     //    println
     //    println(detdag)
@@ -174,7 +174,7 @@ class TestExamples extends AssertionsForJUnit {
 
     //    println(g)
 
-    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe)
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe,describe)
     //TODO: when the code settles down we can make sure this converges to the expected litteral
     println
     println(detdag)
@@ -222,7 +222,7 @@ class TestExamples extends AssertionsForJUnit {
 
     //    println(g)
 
-    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe)
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe,describe)
     //TODO: when the code settles down we can make sure this converges to the expected litteral
     println
     println(detdag)
