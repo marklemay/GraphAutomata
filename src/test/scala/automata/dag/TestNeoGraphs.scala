@@ -22,9 +22,11 @@ class TestNeoGraphs extends AssertionsForJUnit {
       // if (path.startsWith("/usr/lib")){
       //   return Artifact(path)
       // }
-        return Artifact("")
+      return Artifact("")
     }
-    case NeoNode(_, labels, prop) if labels == Set("Process") => Process(prop.getOrElse("name", "???").asInstanceOf[String]) //TODO: Option
+    case NeoNode(_, labels, prop) if labels == Set("Process") => {
+      Process(prop.getOrElse("name", "???").asInstanceOf[String])
+    }
     case NeoRel(_, t, _) => EdgeDesc(t)
 
   }
@@ -44,7 +46,7 @@ class TestNeoGraphs extends AssertionsForJUnit {
     val g = toDiGraph(run(session)("MATCH (n)-[r]-()  where n.type='Process' AND r.type='WasTriggeredBy' RETURN n,r;"))
     println(g)
     println("result")
-    println(LearnDeterministicDag.greedyLearn(g, 10)(describe))
+    println(LearnDeterministicDag.greedyLearn(g, 10)(describe,describe_original))
   }
 
   
@@ -70,6 +72,9 @@ class TestNeoGraphs extends AssertionsForJUnit {
     println("result")
     //    println(g.mkString(sep)
     println("hmmm")
-    println(LearnDeterministicDag.greedyLearn(g, 300)(describe))
+    val dfa = LearnDeterministicDag.greedyLearn(g, 120)(describe, describe_original)
+    println(dfa)
+    val ids=dfa.getpossibleIds(Process("ftpbench"))
+    dfa.getDescendants(ids.head._1)
   }
 }
