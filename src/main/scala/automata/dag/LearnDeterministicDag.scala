@@ -16,10 +16,15 @@ object LearnDeterministicDag {
   }
 
   def writeGrammar(dagdfa: DagDfaFast[_]) = {
-    val fos = new FileOutputStream("graphGrammar.obj")
+    val fos = new FileOutputStream("graphGrammarDiamond.obj")
     val oos = new ObjectOutputStream(fos)
     oos.writeObject(dagdfa)
     oos.close
+  }
+  def readGrammar[LABEL]() : DagDfaFast[LABEL]={
+    val in = new ObjectInputStream(new FileInputStream("graphGrammarDiamond.obj"));
+    val rules = in.readObject().asInstanceOf[DagDfaFast[LABEL]]
+    return rules
   }
 
   def getEdges(dagdfa: DagDfaFast[_]): Int = {

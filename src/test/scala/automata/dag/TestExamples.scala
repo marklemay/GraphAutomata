@@ -381,4 +381,51 @@ class TestExamples extends AssertionsForJUnit {
     println(middleGrammar)
     assert(middleGrammar.parse(ends)(describe).isDefined)
   }
+
+    @Test
+  def learnRepeatedDimondsReadWrite: Unit = {
+
+    //TODO need to figure out hyper edges to make these graph literals more concise
+    //TODO: rename to be more consitent with the paper
+    val g = Graph(
+      "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3",
+      "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2", "a_2" ~> "d_3", "d_3" ~> "a_3",
+
+      "a_4" ~> "b_4", "b_4" ~> "a_5", "a_5" ~> "b_5", "b_5" ~> "a_6", "a_6" ~> "b_6", "b_6" ~> "a_7", "a_7" ~> "b_7", "b_7" ~> "a_8",
+      "a_4" ~> "d_4", "d_4" ~> "a_5", "a_5" ~> "d_5", "d_5" ~> "a_6", "a_6" ~> "d_6", "d_6" ~> "a_7", "a_7" ~> "d_7", "d_7" ~> "a_8")
+    assert(g.isDirected)
+    assert(g.isAcyclic)
+    //    assert(g.isConnected)
+
+    //    println(g)
+
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe, describe)
+    LearnDeterministicDag.writeGrammar(detdag)
+    val new_detdag = LearnDeterministicDag.readGrammar()
+    
+    //TODO: when the code settles down we can make sure this converges to the expected litteral
+    println
+    println(new_detdag)
+
+    // assert(new_detdag.parse(g)(describe).isDefined, "should be able to parse itself")
+
+    // val g2 = Graph(
+    //   "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3", "a_3" ~> "b_4", "b_4" ~> "a_5", "a_5" ~> "b_5", "b_5" ~> "a_6",
+    //   "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2", "a_2" ~> "d_3", "d_3" ~> "a_3", "a_3" ~> "d_4", "d_4" ~> "a_5", "a_5" ~> "d_5", "d_5" ~> "a_6")
+
+    // val middleGrammar = LearnDeterministicDag.augmentGrammar(new_detdag, g2)(describe)
+
+    // assert(middleGrammar.parse(g2)(describe).isDefined, "should be able to parse a similar but unseen dag")
+
+    // val bad1 = Graph(
+    //   "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3",
+    //   "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2")
+
+    // //    println(detdag.parse(bad1)(describe))
+
+    // assert(!middleGrammar.parse(bad1)(describe).isDefined, "should NOT be able to parse a dag with a different patern")
+
+
+  }
+
 }
