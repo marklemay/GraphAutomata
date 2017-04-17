@@ -8,7 +8,7 @@ output_dir=$2
 for i in `ls $input_dir`; do
     neo4j stop
     sleep 10
-    data_set_dir=$input_dir/$i/"spade.graph_db/"
+    data_set_dir=$input_dir/$i/
     neo_dir="/usr/local/Cellar/neo4j/3.1.3/libexec/data/databases/graph.db/"
     graph_auto_dir="/Users/wajih/projects/GraphAutomata/"
     rm -rf $neo_dir/*
