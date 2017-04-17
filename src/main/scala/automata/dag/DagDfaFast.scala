@@ -62,17 +62,21 @@ case class DagDfaFast[LABEL](
     DagDfaFast(newInputTree, newoutputTree, okPairs.map(p => (inMap.getOrElse(p._1, p._1), outMap.getOrElse(p._2, p._2))))
   }
 
-  //TODO: something like these should also be in the DagDfa class
+  //TODO: something like these should also be in the DagDfa class (or in a shared trait)
+  //TODO: make name consistent with the tree version
 
   lazy val languageDescriptionCost = {
-    okPairs.size * (log2(inputTree.ids.size.toDouble) + log2(outputTree.ids.size.toDouble))
+    val labelCost = log2(outputTree.labels.size)
+    (okPairs.size * (log2(inputTree.ids.size.toDouble) + log2(outputTree.ids.size.toDouble)) + inputTree.cost + outputTree.cost
+      - labelCost //  so we don't double count the shared informations
+      )
   }
 
   def graphDescriptionCostGivenLanguage[A](g: Graph[A, DiEdge])(describe: A => LABEL): Double = {
 
     val reverse = reverseGraph(g)
 
-    inputTree.mdl(g)(describeg(g)(describe)) + outputTree.mdl(reverse)(describeg(reverse)(describe))
+    inputTree.conpressionCost(g)(describeg(g)(describe)) + outputTree.conpressionCost(reverse)(describeg(reverse)(describe))
   }
 
   //for now keeping it simple with just the cost of the trees
@@ -107,7 +111,7 @@ case class DagDfaFast[LABEL](
       newReachable = inputTree.transitions.filter(t => !t.from.toSet.intersect(reachableIds + inId).isEmpty).map(_.to)
     }
     val endTime = System.currentTimeMillis().toDouble
-    println("Time to get ancestors: "  + (endTime-startTime))
+    println("Time to get ancestors: " + (endTime - startTime))
     newReachable
   }
 
@@ -121,12 +125,8 @@ case class DagDfaFast[LABEL](
       newReachable = outputTree.transitions.filter(t => !t.from.toSet.intersect(reachableIds + outId).isEmpty).map(_.to)
     }
     val endTime = System.currentTimeMillis().toDouble
-    println("Time to get descendants: "  + (endTime-startTime))
+    println("Time to get descendants: " + (endTime - startTime))
     newReachable
   }
-
-  
-  /** creates a minimally more general grammar such that g is paresable */
-  def augment[A](g: Graph[A, DiEdge])(describe: A => LABEL):  DagDfaFast[LABEL] = ???
 
 }
