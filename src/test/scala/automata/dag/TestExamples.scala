@@ -13,6 +13,8 @@ import scalax.collection.GraphPredef
 import automata.tree.LearnTreeAutomata
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.Ignore
+import automata.tree.TreeDfaFast
+import automata.tree.TreeAutomata.Transition
 
 @Test
 class TestExamples extends AssertionsForJUnit {
@@ -33,7 +35,7 @@ class TestExamples extends AssertionsForJUnit {
       "a_2_0" ~> "a_2_1", "a_2_1" ~> "a_2_2", "a_2_2" ~> "a_2_3")
     //    println(g)
 
-    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe,describe)
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe, describe)
     //    println(detdag)
 
     assert(detdag.parse(g)(describe).isDefined, "should be able to parse itself")
@@ -59,7 +61,7 @@ class TestExamples extends AssertionsForJUnit {
       "a_4" ~> "b_4", "b_4" ~> "c_4", "c_4" ~> "d_4")
     //    println(g)
 
-    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe,describe)
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe, describe)
     //TODO: when the code settles down we can make sure this converges to the expected litteral
     //    println
     //    println(detdag)
@@ -90,7 +92,7 @@ class TestExamples extends AssertionsForJUnit {
     assert(g.isConnected)
     //    println(g)
 
-    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe,describe)
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe, describe)
     //TODO: when the code settles down we can make sure this converges to the expected litteral
     //    println
     //    println(detdag)
@@ -131,7 +133,7 @@ class TestExamples extends AssertionsForJUnit {
       "w_3" ~> "x_3", "x_3" ~> "y_3", "y_3" ~> "z_3")
     //    println(g)
 
-    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe,describe)
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe, describe)
     //TODO: when the code settles down we can make sure this converges to the expected litteral
     //    println
     //    println(detdag)
@@ -174,7 +176,7 @@ class TestExamples extends AssertionsForJUnit {
 
     //    println(g)
 
-    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe,describe)
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe, describe)
     //TODO: when the code settles down we can make sure this converges to the expected litteral
     println
     println(detdag)
@@ -222,7 +224,7 @@ class TestExamples extends AssertionsForJUnit {
 
     //    println(g)
 
-    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe,describe)
+    val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe, describe)
     //TODO: when the code settles down we can make sure this converges to the expected litteral
     println
     println(detdag)
@@ -247,4 +249,136 @@ class TestExamples extends AssertionsForJUnit {
   //TODO: concrete dags
   //TODO: branching dags
   //TODO: the 3 sat grammar for fun
+
+  @Test
+  def augmentRepeatedDimondsAfter: Unit = {
+    val diamondDagGrammar = DagDfaFast(
+      TreeDfaFast(
+        Set(
+          Transition(Bag[Int](), "a", 4),
+          Transition(Bag(0, 1), "a", 4),
+          Transition(Bag(4), "b", 0),
+          Transition(Bag(4), "d", 1))),
+
+      TreeDfaFast(
+        Set(
+          Transition(Bag[Int](), "a", 1),
+          Transition(Bag(0, 2), "a", 1),
+          Transition(Bag(1), "d", 0),
+          Transition(Bag(1), "b", 2))),
+
+      Set((1, 0), (4, 1), (0, 2)))
+
+    val after = Graph(
+      "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3",
+      "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2", "a_2" ~> "d_3", "d_3" ~> "a_3",
+      "a_3" ~> "z_1", "z_1" ~> "z_2")
+
+    assert(after.isDirected)
+    assert(after.isAcyclic)
+
+    val afterGrammar = LearnDeterministicDag.augmentGrammar(diamondDagGrammar, after)(describe)
+
+    println(afterGrammar)
+    assert(afterGrammar.parse(after)(describe).isDefined)
+
+    val differentAfter = Graph(
+      "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2",
+      "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2",
+      "a_2" ~> "z_1", "z_1" ~> "z_2")
+    assert(afterGrammar.parse(differentAfter)(describe).isDefined)
+
+    val badAfter = Graph(
+      "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3",
+      "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2", "a_2" ~> "d_3", "d_3" ~> "a_3",
+      "a_3" ~> "z_1")
+
+    //TODO: test with before and middle
+    assert(afterGrammar.parse(badAfter)(describe).isEmpty)
+  }
+
+  @Test
+  def augmentRepeatedDimondsMiddle: Unit = {
+    val diamondDagGrammar = DagDfaFast(
+      TreeDfaFast(
+        Set(
+          Transition(Bag[Int](), "a", 4),
+          Transition(Bag(0, 1), "a", 4),
+          Transition(Bag(4), "b", 0),
+          Transition(Bag(4), "d", 1))),
+
+      TreeDfaFast(
+        Set(
+          Transition(Bag[Int](), "a", 1),
+          Transition(Bag(0, 2), "a", 1),
+          Transition(Bag(1), "d", 0),
+          Transition(Bag(1), "b", 2))),
+
+      Set((1, 0), (4, 1), (0, 2)))
+
+    //right now you need more evidence to completely augment something more complicated into an existing model, it will most likely be considered a special case
+    val middle = Graph(
+      "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2",
+      "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2",
+      "a_2" ~> "z_1", "z_1" ~> "a_3",
+      "a_3" ~> "b_3", "b_3" ~> "a_4", "a_4" ~> "b_5", "b_5" ~> "a_6",
+      "a_3" ~> "d_3", "d_3" ~> "a_4", "a_4" ~> "d_5", "d_5" ~> "a_6",
+
+      "a_10" ~> "b_10", "b_10" ~> "a_11",
+      "a_10" ~> "d_10", "d_10" ~> "a_11",
+      "a_11" ~> "z_11", "z_11" ~> "a_13",
+      "a_13" ~> "b_13", "b_13" ~> "a_14", "a_14" ~> "b_15", "b_15" ~> "a_16",
+      "a_13" ~> "d_13", "d_13" ~> "a_14", "a_14" ~> "d_15", "d_15" ~> "a_16",
+
+      "a_20" ~> "b_20", "b_20" ~> "a_21", "a_21" ~> "b_21", "b_21" ~> "a_22",
+      "a_20" ~> "d_20", "d_20" ~> "a_21", "a_21" ~> "d_21", "d_21" ~> "a_22",
+      "a_22" ~> "z_21", "z_21" ~> "a_23",
+      "a_23" ~> "b_23", "b_23" ~> "a_24",
+      "a_23" ~> "d_23", "d_23" ~> "a_24")
+
+    assert(middle.isDirected)
+    assert(middle.isAcyclic)
+    assert(!middle.isConnected)
+
+    val middleGrammar = LearnDeterministicDag.augmentGrammar(diamondDagGrammar, middle)(describe)
+
+    println(middleGrammar)
+    assert(middleGrammar.parse(middle)(describe).isDefined)
+  }
+
+  @Test
+  def augmentRepeatedDimondEnds: Unit = {
+    val diamondDagGrammar = DagDfaFast(
+      TreeDfaFast(
+        Set(
+          Transition(Bag[Int](), "a", 4),
+          Transition(Bag(0, 1), "a", 4),
+          Transition(Bag(4), "b", 0),
+          Transition(Bag(4), "d", 1))),
+
+      TreeDfaFast(
+        Set(
+          Transition(Bag[Int](), "a", 1),
+          Transition(Bag(0, 2), "a", 1),
+          Transition(Bag(1), "d", 0),
+          Transition(Bag(1), "b", 2))),
+
+      Set((1, 0), (4, 1), (0, 2)))
+
+    //right now you need more evidence to completely augment something more complicated into an existing model, it will most likely be considered a special case
+    val ends = Graph(
+      "s_0" ~> "s_1", "s_1" ~> "a_0",
+      "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3", "a_3" ~> "b_4", "b_4" ~> "a_5", "a_5" ~> "b_5", "b_5" ~> "a_6",
+      "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2", "a_2" ~> "d_3", "d_3" ~> "a_3", "a_3" ~> "d_4", "d_4" ~> "a_5", "a_5" ~> "d_5", "d_5" ~> "a_6",
+      "a_6" ~> "z_1", "z_1" ~> "z_2")
+
+    assert(ends.isDirected)
+    assert(ends.isAcyclic)
+    assert(ends.isConnected)
+
+    val middleGrammar = LearnDeterministicDag.augmentGrammar(diamondDagGrammar, ends)(describe)
+
+    println(middleGrammar)
+    assert(middleGrammar.parse(ends)(describe).isDefined)
+  }
 }
