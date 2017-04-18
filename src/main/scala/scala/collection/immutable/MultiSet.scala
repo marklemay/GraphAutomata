@@ -10,7 +10,7 @@ object MultiSet {
   //  implicit def defualtConfig[A] = Bag.configuration.compact[A]
 
   //TODO: this is a bad place to put this configuration
-  implicit def bagMax[A] = LimitBags.LimitBags[A](1)
+  implicit def bagMax[A] = LimitBags.LimitBags[A](12)
 
   implicit def defualtConfig[A] = {
 

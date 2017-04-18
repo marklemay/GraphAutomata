@@ -79,6 +79,16 @@ class TestNeoGraphs extends AssertionsForJUnit {
         return Artifact("/usr/bin/")
       }else if (path.startsWith("/usr/share")){
         return Artifact("/usr/share/")
+      }else if (path.startsWith("/dev/")){
+        return Artifact("/dev/")
+      }
+      val source_addr=prop.getOrElse("source address", "").asInstanceOf[String]
+      if (source_addr.length() > 1){
+        return Artifact(source_addr)
+      }
+      val dest_addr=prop.getOrElse("destination address", "").asInstanceOf[String]
+      if (dest_addr.length() > 1){
+        return Artifact(dest_addr)
       }
       return Artifact("")
     }

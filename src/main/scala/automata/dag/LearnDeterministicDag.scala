@@ -37,16 +37,16 @@ object LearnDeterministicDag {
   }
   def getBeforeAfter(before: Long, after: Long, i_nodes: Int, f_nodes: Int, i_edges: Int, f_edges: Int): (Int, Int) = {
     // Return size in kilobyes
-    val before_cont: Double = 32.8
-    val after_cont: Double = 40.8
+    val before_cont: Double = 152.8
+    val after_cont: Double = 158.8
     val b_add_size = (before_cont * i_nodes) + (12 * i_edges)
     val a_add_size = (after_cont * f_nodes) + (12 * f_edges)
-    val before_size = before + b_add_size / 1000.0
-    val after_size = after + a_add_size / 1000.0
+    val before_size = (before + b_add_size) / 1000.0
+    val after_size = (after + a_add_size) / 1000.0
     return (before_size.toInt, after_size.toInt)
   }
 
-  def printStatistics[LABEL, A](g: Graph[A, DiEdge], time_cost: ListBuffer[(Double, Double)], dagdfa: DagDfaFast[LABEL])(describe: A => LABEL, describe_original: A => LABEL) = {
+  def printStatistics[LABEL, A](g: Graph[A, DiEdge], time_cost: ListBuffer[(Double, Double)], dagdfa: DagDfaFast[LABEL], total_time: Double)(describe: A => LABEL, describe_original: A => LABEL) = {
     val writer = new PrintWriter(new File("time_cost.csv"))
 
     for ((time, cost) <- time_cost) {
@@ -85,6 +85,7 @@ object LearnDeterministicDag {
     val my_sizes = getBeforeAfter(bsize, asize, g.nodes.size, dagdfa.inputTree.transitions.size, g.edges.size, getEdges(dagdfa))
     writer2.write("i-size-bytes," + my_sizes._1 + "\n")
     writer2.write("f-size-bytes," + my_sizes._2 + "\n")
+    writer2.write("total-time," + "%.2f".format(total_time) + "\n")
     writer2.close
     // writer2.write("Time to parse: " + "\n")
     // writer2.write("Time spent in induction: " + " -- "+ "\n")
@@ -120,7 +121,8 @@ object LearnDeterministicDag {
     var timeLapsed = System.currentTimeMillis().toDouble
     val original_base = prefixSuffixDfa(g)(describe_original) //already minimized
     time_cost += (((System.currentTimeMillis().toDouble - timeLapsed) / 1000.0, original_base.mdl(g)(describe_original)))
-    
+
+    val TotalstartTime = System.currentTimeMillis().toDouble / 1000.0
     val base = prefixSuffixDfa(g)(describe) //already minimized
     println("Done with Prefix Suffix DFA")
     var knownCosts = Map[DagDfaFast[LABEL], Double](base -> base.mdl(g)(describe))
@@ -163,8 +165,8 @@ object LearnDeterministicDag {
       }
       activeParents = (activeParents ++ newParents) - cheapest
     }
-
-    printStatistics(g, time_cost, knownCosts.minBy(_._2)._1)(describe,describe_original)
+    val TotalendTime = (System.currentTimeMillis().toDouble / 1000.0) - TotalstartTime
+    printStatistics(g, time_cost, knownCosts.minBy(_._2)._1, TotalendTime)(describe,describe_original)
     val dag_cust = knownCosts.minBy(_._2)._1
 
     return dag_cust
