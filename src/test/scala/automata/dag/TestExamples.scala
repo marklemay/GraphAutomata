@@ -408,15 +408,15 @@ class TestExamples extends AssertionsForJUnit {
     println
     println(new_detdag)
 
-    // assert(new_detdag.parse(g)(describe).isDefined, "should be able to parse itself")
+    assert(new_detdag.parse(g)(describe).isDefined, "should be able to parse itself")
 
-    // val g2 = Graph(
-    //   "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3", "a_3" ~> "b_4", "b_4" ~> "a_5", "a_5" ~> "b_5", "b_5" ~> "a_6",
-    //   "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2", "a_2" ~> "d_3", "d_3" ~> "a_3", "a_3" ~> "d_4", "d_4" ~> "a_5", "a_5" ~> "d_5", "d_5" ~> "a_6")
+    val g2 = Graph(
+      "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3", "a_3" ~> "b_4", "b_4" ~> "a_5", "a_5" ~> "b_5", "b_5" ~> "a_6",
+      "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2", "a_2" ~> "d_3", "d_3" ~> "a_3", "a_3" ~> "d_4", "d_4" ~> "a_5", "a_5" ~> "d_5", "d_5" ~> "a_6")
 
-    // val middleGrammar = LearnDeterministicDag.augmentGrammar(new_detdag, g2)(describe)
+    val middleGrammar = LearnDeterministicDag.augmentGrammar(new_detdag, g2)(describe)
 
-    // assert(middleGrammar.parse(g2)(describe).isDefined, "should be able to parse a similar but unseen dag")
+    assert(middleGrammar.parse(g2)(describe).isDefined, "should be able to parse a similar but unseen dag")
 
     // val bad1 = Graph(
     //   "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3",
