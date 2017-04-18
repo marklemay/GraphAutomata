@@ -5,12 +5,30 @@ import scala.collection.immutable.Bag //suprisingly important to be explicit abo
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiEdge
 import TreeAutomata._
+import java.io.IOException
+import java.io.ObjectOutputStream
+import java.io.ObjectInputStream
 
 //TODO: enforce minimal?
 /** a minimal tree dfa representation, parsed from levaes to roots*/
 // a tree dfa optimized for speed
 //TODO: make value class to save on allocation
-case class TreeDfaFast[LABEL](transitions: Set[Transition[LABEL, Int]]) { //, override val roots: Set[Int]) extends TreeAutomata[LABEL, Int] {
+case class TreeDfaFast[LABEL](var transitions: Set[Transition[LABEL, Int]]) { //, override val roots: Set[Int]) extends TreeAutomata[LABEL, Int] {
+
+  @throws(classOf[IOException])
+  private def writeObject(out: ObjectOutputStream): Unit = {
+    out.writeObject(transitions)
+  }
+
+  @throws(classOf[IOException])
+  private def readObject(in: ObjectInputStream): Unit = {
+    val trans = in.readObject().asInstanceOf[Set[Transition[LABEL, Int]]]
+
+    this.transitions = trans
+    //    println(trans)
+
+  }
+
   //    println
   //    println(this)
 

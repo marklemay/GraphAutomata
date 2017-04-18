@@ -4,10 +4,13 @@ import scala.collection.immutable.MultiSet._
 import scala.collection.immutable.Bag //suprisingly important to be explicit about this
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiEdge
+import java.io.IOException
+import java.io.ObjectOutputStream
+import java.io.ObjectInputStream
 
 object TreeAutomata {
   //TODO: move this
-   def log2(x: Double) = if (x <= 0d) { 0d } else { Math.log10(x) / Math.log10(2.0) }
+  def log2(x: Double) = if (x <= 0d) { 0d } else { Math.log10(x) / Math.log10(2.0) }
 
   //TODO: do a Bag version
   //TODO: avoid this entirely?
@@ -28,7 +31,27 @@ object TreeAutomata {
     }
   }
 
-  case class Transition[LABEL, ID](from: Bag[ID], label: LABEL, to: ID) {
+//  very not happy about these vars
+  case class Transition[LABEL, ID](var from: Bag[ID], var label: LABEL, var to: ID) extends Serializable{
+
+    //keep  an eye on https://github.com/nicolasstucki/multisets/issues/9
+    @throws(classOf[IOException])
+    private def writeObject(out: ObjectOutputStream): Unit = {
+      out.writeObject((from.multiplicities.toSet, label, to))
+      
+    }
+
+    @throws(classOf[IOException])
+    private def readObject(in: ObjectInputStream): Unit = {
+      
+      println("???")
+      val (froms, label, to) = in.readObject().asInstanceOf[(Set[(ID, Int)],LABEL,ID)]
+      val v = froms.toSeq
+      
+      this.from=Bag.from(v:_*)
+      this.label=label
+      this.to=to
+    }
 
     def map[NEW_LABEL, NEW_ID](
       fLabel: LABEL => NEW_LABEL,
@@ -38,9 +61,8 @@ object TreeAutomata {
     def mapId[NEW_ID](fId: ID => NEW_ID): Transition[LABEL, NEW_ID] = map(identity, fId) //TODO: faster specialized?
 
   }
-  
-  
-   //A trait to do all the work common to both NFA and DFA
+
+  //A trait to do all the work common to both NFA and DFA
 
   //TODO: should tree automata be ID agnostic?
   trait TreeAutomata[LABEL, ID] { //TODO: extends Tree lang
