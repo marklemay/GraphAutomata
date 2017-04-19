@@ -401,7 +401,7 @@ class TestExamples extends AssertionsForJUnit {
 
     val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe, describe)
     LearnDeterministicDag.writeGrammar(detdag)
-    val new_detdag = LearnDeterministicDag.readGrammar()
+    val new_detdag = LearnDeterministicDag.readGrammar[String]()
     
     assert(detdag == new_detdag)
     //TODO: when the code settles down we can make sure this converges to the expected litteral
