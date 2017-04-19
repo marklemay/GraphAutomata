@@ -145,10 +145,12 @@ class TestNeoGraphs extends AssertionsForJUnit {
       val run = Runtime.getRuntime();
       println(run.totalMemory() / mb)
     }
-    val prev_grammar = LearnDeterministicDag.readGrammar()
+    val prev_grammar = LearnDeterministicDag.readGrammar[Desc]()
     println("reading done")
     val driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "oldnew"))
     val session = driver.session();
     val g = fullGraph(session)
+    val middleGrammar = LearnDeterministicDag.augmentGrammar(prev_grammar, g)(describe,describe_original)
+    println(middleGrammar)
   }
 }

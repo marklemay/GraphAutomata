@@ -47,12 +47,15 @@ object LearnDeterministicDag {
   }
 
   def printStatistics[LABEL, A](g: Graph[A, DiEdge], time_cost: ListBuffer[(Double, Double)], dagdfa: DagDfaFast[LABEL], total_time: Double)(describe: A => LABEL, describe_original: A => LABEL) = {
-    val writer = new PrintWriter(new File("time_cost.csv"))
 
-    for ((time, cost) <- time_cost) {
-      writer.write(time.toString + ", " + "%.3f".format(cost).toString + "\n")
+    if (time_cost != null){
+      val writer = new PrintWriter(new File("time_cost.csv"))
+
+      for ((time, cost) <- time_cost) {
+        writer.write(time.toString + ", " + "%.3f".format(cost).toString + "\n")
+      }
+      writer.close
     }
-    writer.close
     val writer2 = new PrintWriter(new File("stats.csv"))
     val base = prefixSuffixDfa(g)(describe_original) //already minimized
     writer2.write("i-graph-vertices," + g.nodes.size + "\n")
@@ -90,6 +93,7 @@ object LearnDeterministicDag {
     // writer2.write("Time to parse: " + "\n")
     // writer2.write("Time spent in induction: " + " -- "+ "\n")
   }
+
   //TODO: there has got tp be a better way to do this
   def describeg[A, LABEL](g: Graph[A, DiEdge])(describe: A => LABEL)(n: g.NodeT): LABEL = {
     describe(n.value)
@@ -291,8 +295,9 @@ object LearnDeterministicDag {
    * creates a minimally more general grammar such that g is paresable,
    *  it will greedily minimize until a local minimum is hit, making it a n^3 worst case
    */
-  def augmentGrammar[A, LABEL](dfa: DagDfaFast[LABEL], g: Graph[A, DiEdge])(describe: A => LABEL): DagDfaFast[LABEL] = {
+  def augmentGrammar[A, LABEL](dfa: DagDfaFast[LABEL], g: Graph[A, DiEdge])(describe: A => LABEL, describe_original: A => LABEL): DagDfaFast[LABEL] = {
     //TODO:  this stuff relies on some hidden assumptions ie that the indexes merge into the lower number
+
     val newDfa = maximallyExtendGrammar(dfa, g)(describe)
 
     println(newDfa)
@@ -302,6 +307,7 @@ object LearnDeterministicDag {
     var bestDfa = newDfa
     var bestCost = hackyCost(newDfa, g, describe, dfa.okPairs)
 
+    val TotalstartTime = System.currentTimeMillis().toDouble / 1000.0
     //TODO: better
     while (true) {
       println
@@ -317,9 +323,13 @@ object LearnDeterministicDag {
         bestDfa = possible
         bestCost = cost
       } else {
+        val TotalendTime = (System.currentTimeMillis().toDouble / 1000.0) - TotalstartTime
+        printStatistics(g,null,dfa,TotalendTime)(describe,describe_original)
         return bestDfa
       }
     }
+    val TotalendTime = (System.currentTimeMillis().toDouble / 1000.0) - TotalstartTime
+    printStatistics(g,null,dfa,TotalendTime)(describe,describe_original)
 
     bestDfa
   }

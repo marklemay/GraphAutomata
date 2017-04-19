@@ -277,7 +277,7 @@ class TestExamples extends AssertionsForJUnit {
     assert(after.isDirected)
     assert(after.isAcyclic)
 
-    val afterGrammar = LearnDeterministicDag.augmentGrammar(diamondDagGrammar, after)(describe)
+    val afterGrammar = LearnDeterministicDag.augmentGrammar(diamondDagGrammar, after)(describe,describe)
 
     println(afterGrammar)
     assert(afterGrammar.parse(after)(describe).isDefined)
@@ -340,7 +340,7 @@ class TestExamples extends AssertionsForJUnit {
     assert(middle.isAcyclic)
     assert(!middle.isConnected)
 
-    val middleGrammar = LearnDeterministicDag.augmentGrammar(diamondDagGrammar, middle)(describe)
+    val middleGrammar = LearnDeterministicDag.augmentGrammar(diamondDagGrammar, middle)(describe,describe)
 
     println(middleGrammar)
     assert(middleGrammar.parse(middle)(describe).isDefined)
@@ -376,7 +376,7 @@ class TestExamples extends AssertionsForJUnit {
     assert(ends.isAcyclic)
     assert(ends.isConnected)
 
-    val middleGrammar = LearnDeterministicDag.augmentGrammar(diamondDagGrammar, ends)(describe)
+    val middleGrammar = LearnDeterministicDag.augmentGrammar(diamondDagGrammar, ends)(describe,describe)
 
     println(middleGrammar)
     assert(middleGrammar.parse(ends)(describe).isDefined)
@@ -414,7 +414,7 @@ class TestExamples extends AssertionsForJUnit {
       "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3", "a_3" ~> "b_4", "b_4" ~> "a_5", "a_5" ~> "b_5", "b_5" ~> "a_6",
       "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2", "a_2" ~> "d_3", "d_3" ~> "a_3", "a_3" ~> "d_4", "d_4" ~> "a_5", "a_5" ~> "d_5", "d_5" ~> "a_6")
 
-    val middleGrammar = LearnDeterministicDag.augmentGrammar(new_detdag, g2)(describe)
+    val middleGrammar = LearnDeterministicDag.augmentGrammar(new_detdag, g2)(describe,describe)
 
     assert(middleGrammar.parse(g2)(describe).isDefined, "should be able to parse a similar but unseen dag")
 
