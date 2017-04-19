@@ -108,7 +108,6 @@ class TestNeoGraphs extends AssertionsForJUnit {
   @Ignore
   @Test
   def learnNeo4jOnlyActivities: Unit = {
-    println("wajih")
     val driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "oldnew"))
     val session = driver.session();
     val g = toDiGraph(run(session)("MATCH (n)-[r]-()  where n.type='Process' AND r.type='WasTriggeredBy' RETURN n,r;"))
@@ -116,7 +115,6 @@ class TestNeoGraphs extends AssertionsForJUnit {
     println("result")
     println(LearnDeterministicDag.greedyLearn(g, 10)(describe,describe_original))
   }
-
   
   // bigger graphs, may need to give the jvm needs more memory
   @Test
@@ -126,28 +124,26 @@ class TestNeoGraphs extends AssertionsForJUnit {
       val run = Runtime.getRuntime();
       println(run.totalMemory() / mb)
     }
-    
-    
-    println("wajih")
     // I REALLY hate how the prov arrows go in the opposite direction of cuasality, unlike literally everything ever.  who thought this was a good idea?
     val driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "oldnew"))
-    println("wajihdone")
     val session = driver.session();
-    
-    println("!!!!")
     val g = fullGraph(session)
-    // writeGraph1(g)
     println("result")
-    // println(g)
-    //    println(g.mkString(sep)
-    println("hmmm")
     val dfa = LearnDeterministicDag.greedyLearn(g, 30)(describe, describe_original)
-    // println(dfa)
-    // val ggg = createGraphFromDag(dfa)
-    // println("+++++++++++++++++")
-    // println(ggg)
-    // writeGraph2(ggg)
-    // val ids=dfa.getpossibleIds(Process("ftpbench"))
-    // dfa.getDescendants(ids.head._1)
+    LearnDeterministicDag.writeGrammar(dfa)
+  }
+
+  @Test
+  def learnNeo4jAugmented: Unit = {
+    {
+      val mb = 1024*1024;
+      val run = Runtime.getRuntime();
+      println(run.totalMemory() / mb)
+    }
+    val prev_grammar = LearnDeterministicDag.readGrammar()
+    println("reading done")
+    val driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "oldnew"))
+    val session = driver.session();
+    val g = fullGraph(session)
   }
 }
