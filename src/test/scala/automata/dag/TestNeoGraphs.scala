@@ -13,14 +13,19 @@ import org.neo4j.driver.v1.StatementResult
 
 import org.junit.Ignore
 
-class TestNeoGraphs extends AssertionsForJUnit {
-
+object TestNeoGraphs {
   sealed trait Desc
   case class Artifact(name: String) extends Desc
   case class Process(name: String) extends Desc
 
   case class EdgeDesc(t: String) extends Desc
 
+}
+
+class TestNeoGraphs extends AssertionsForJUnit {
+
+  import TestNeoGraphs._
+  
   def writeGraphInitial(g: Graph[NeoData, DiEdge]) = {
     val fos = new FileOutputStream("initialgraph.obj")
     val oos = new ObjectOutputStream(fos)
@@ -35,32 +40,32 @@ class TestNeoGraphs extends AssertionsForJUnit {
     oos.close
   }
 
-  def createGraphFromDag(dagdfa: DagDfaFast[_]) : Graph[NeoData, DiEdge] = {
+  def createGraphFromDag(dagdfa: DagDfaFast[_]): Graph[NeoData, DiEdge] = {
     val list_trans = dagdfa.inputTree.transitions
     println(list_trans)
     var idtoLabel = Map[Int, Set[String]]()
     var g = Graph[NeoData, DiEdge]()
-    for ( li <- list_trans){
-      if( li.label.isInstanceOf[Artifact]) {
+    for (li <- list_trans) {
+      if (li.label.isInstanceOf[Artifact]) {
         idtoLabel += li.to -> Set("Artifact")
       }
-      if( li.label.isInstanceOf[Process]) {
+      if (li.label.isInstanceOf[Process]) {
         idtoLabel += li.to -> Set("Process")
       }
     }
     var nodes = Set[NeoData]()
     var edges = Set[DiEdge[NeoNode]]()
-    for ( item <- list_trans){
+    for (item <- list_trans) {
       var node = NeoNode(item.to, idtoLabel(item.to), Map())
       // var node = NeoNode(item.to, Set("???"), Map())
       nodes += node
-      for ( ances <- item.from){
+      for (ances <- item.from) {
         var node_2 = NeoNode(ances, idtoLabel(item.to), Map())
         nodes += node_2
         edges += node_2 ~> node
       }
     }
-    for (edge <- edges){
+    for (edge <- edges) {
       g += edge
     }
     return g
@@ -68,26 +73,26 @@ class TestNeoGraphs extends AssertionsForJUnit {
 
   def describe(nd: NeoData): Desc = nd match {
     case NeoNode(_, labels, prop) if labels == Set("Artifact") => {
-      val path=prop.getOrElse("path", "").asInstanceOf[String]
-      if (path.startsWith("/usr/lib")){
+      val path = prop.getOrElse("path", "").asInstanceOf[String]
+      if (path.startsWith("/usr/lib")) {
         return Artifact("/usr/lib/")
-      }else if (path.startsWith("/etc/")){
+      } else if (path.startsWith("/etc/")) {
         return Artifact("/etc/")
-      }else if (path.startsWith("/home/")){
+      } else if (path.startsWith("/home/")) {
         return Artifact("/home/")
-      }else if (path.startsWith("/usr/bin")){
+      } else if (path.startsWith("/usr/bin")) {
         return Artifact("/usr/bin/")
-      }else if (path.startsWith("/usr/share")){
+      } else if (path.startsWith("/usr/share")) {
         return Artifact("/usr/share/")
-      }else if (path.startsWith("/dev/")){
+      } else if (path.startsWith("/dev/")) {
         return Artifact("/dev/")
       }
-      val source_addr=prop.getOrElse("source address", "").asInstanceOf[String]
-      if (source_addr.length() > 1){
+      val source_addr = prop.getOrElse("source address", "").asInstanceOf[String]
+      if (source_addr.length() > 1) {
         return Artifact(source_addr)
       }
-      val dest_addr=prop.getOrElse("destination address", "").asInstanceOf[String]
-      if (dest_addr.length() > 1){
+      val dest_addr = prop.getOrElse("destination address", "").asInstanceOf[String]
+      if (dest_addr.length() > 1) {
         return Artifact(dest_addr)
       }
       return Artifact("")
@@ -113,14 +118,14 @@ class TestNeoGraphs extends AssertionsForJUnit {
     val g = toDiGraph(run(session)("MATCH (n)-[r]-()  where n.type='Process' AND r.type='WasTriggeredBy' RETURN n,r;"))
     println(g)
     println("result")
-    println(LearnDeterministicDag.greedyLearn(g, 10)(describe,describe_original))
+    println(LearnDeterministicDag.greedyLearn(g, 10)(describe, describe_original))
   }
-  
+
   // bigger graphs, may need to give the jvm needs more memory
   @Test
   def learnNeo4j: Unit = {
     {
-      val mb = 1024*1024;
+      val mb = 1024 * 1024;
       val run = Runtime.getRuntime();
       println(run.totalMemory() / mb)
     }
@@ -136,7 +141,7 @@ class TestNeoGraphs extends AssertionsForJUnit {
   @Test
   def learnNeo4jAugmented: Unit = {
     {
-      val mb = 1024*1024;
+      val mb = 1024 * 1024;
       val run = Runtime.getRuntime();
       println(run.totalMemory() / mb)
     }
