@@ -3,22 +3,23 @@ import scala.collection.immutable.MultiSet._
 import scala.collection.immutable.Bag //suprisingly important to be explicit about this
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiEdge
-import automata.tree.TreeDfa
 import scalax.collection.edge.Implicits._
 import scalax.collection.GraphPredef._
 import scalax.collection.GraphEdge.DiEdge
 import scalax.collection.GraphPredef
+import scalax.collection.GraphHelper._
 import LearnDeterministicDag._
 import automata.tree.TreeDfaFast
+import math.Logs._
 
-import automata.tree.TreeAutomata.log2
+import java.io.IOException
+import java.io.ObjectOutputStream
 
-//TODO: not thrilled with this name
+
 /**
- * defines a "dag grammar" such that  each node is completely characterized by it's visible inpt and its visable output
- *  this is achieved by an input and output tree automata *
+ * Defines a "DAG grammar" such that each node is completely characterized by it's visible input and output trees.
  */
-case class DagDfaFast[LABEL](
+case class DagDfa[LABEL](
     //what can deduce about a node from its inputs
     inputTree: TreeDfaFast[LABEL],
     //what can deduce about a node from its outputs
@@ -30,8 +31,7 @@ case class DagDfaFast[LABEL](
   def parse[A](g: Graph[A, DiEdge])(describe: A => LABEL): Option[Map[A, (Int, Int)]] = {
 
     val reverse = reverseGraph(g)
-    val startTime = System.currentTimeMillis().toDouble
-    (inputTree.parse(g)(describeg(g)(describe)), outputTree.parse(reverse)(describeg(reverse)(describe))) match {
+    (inputTree.parse(g)(describeNode(g)(describe)), outputTree.parse(reverse)(describeNode(reverse)(describe))) match {
       case (Some(inMap), Some(outMap)) => {
         val ins = inMap.map(p => p._1.value -> p._2)
         val outs = outMap.map(p => p._1.value -> p._2)
@@ -46,12 +46,11 @@ case class DagDfaFast[LABEL](
       }
       case _ => None
     }
-    // How to end time here in scala ??
   }
 
   //TODO: could in theory do a merge without  a re parse, it would probably be faster too
   //TODO: We should profile this.  It still runs slower than I think it should.  
-  def merge[A](a: (Int, Int), b: (Int, Int)): DagDfaFast[LABEL] = {
+  def merge[A](a: (Int, Int), b: (Int, Int)): DagDfa[LABEL] = {
 
     val (aIn, aOut) = a
     val (bIn, bOut) = b
@@ -59,7 +58,7 @@ case class DagDfaFast[LABEL](
     val (newInputTree, inMap) = inputTree.merge(aIn, bIn)
     val (newoutputTree, outMap) = outputTree.merge(aOut, bOut)
 
-    DagDfaFast(newInputTree, newoutputTree, okPairs.map(p => (inMap.getOrElse(p._1, p._1), outMap.getOrElse(p._2, p._2))))
+    DagDfa(newInputTree, newoutputTree, okPairs.map(p => (inMap.getOrElse(p._1, p._1), outMap.getOrElse(p._2, p._2))))
   }
 
   //TODO: something like these should also be in the DagDfa class (or in a shared trait)
@@ -76,7 +75,7 @@ case class DagDfaFast[LABEL](
 
     val reverse = reverseGraph(g)
 
-    inputTree.conpressionCost(g)(describeg(g)(describe)) + outputTree.conpressionCost(reverse)(describeg(reverse)(describe))
+    inputTree.conpressionCost(g)(describeNode(g)(describe)) + outputTree.conpressionCost(reverse)(describeNode(reverse)(describe))
   }
 
   //for now keeping it simple with just the cost of the trees

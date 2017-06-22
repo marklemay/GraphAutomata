@@ -8,55 +8,28 @@ import TreeAutomata._
 import java.io.IOException
 import java.io.ObjectOutputStream
 import java.io.ObjectInputStream
+import math.Logs._
 
-//TODO: enforce minimal?
-/** a minimal tree dfa representation, parsed from levaes to roots*/
-// a tree dfa optimized for speed
+/** A minimal tree DFA representation, a tree DFA optimized for speed */
 //TODO: make value class to save on allocation
-case class TreeDfaFast[LABEL](var transitions: Set[Transition[LABEL, Int]]) { //, override val roots: Set[Int]) extends TreeAutomata[LABEL, Int] {
+case class TreeDfaFast[LABEL](val transitions: Set[Transition[LABEL, Int]]) {
 
-  @throws(classOf[IOException])
-  private def writeObject(out: ObjectOutputStream): Unit = {
-    out.writeObject(transitions)
-  }
-
-  @throws(classOf[IOException])
-  private def readObject(in: ObjectInputStream): Unit = {
-    val trans = in.readObject().asInstanceOf[Set[Transition[LABEL, Int]]]
-
-    this.transitions = trans
-    //    println(trans)
-
-  }
-
-  //    println
-  //    println(this)
-
-  //  require(!roots.isEmpty)
-  //
-  //  require(reachable == transitions, s"\n$reachable\n$transitions\n${reachable.diff(transitions)}\n${transitions.diff(reachable)}")
-  //
-  //  require(transitions.groupBy(t => (t.from, t.label)).mapValues(_.size).values.forall(_ == 1), transitions.groupBy(t => (t.from, t.label)).filter(_._2.size != 1))
-
-  //TODO converting to a map to a map might be helpful
+  /** map from transitions to values */
   lazy val transitionsToId = transitions.groupBy(t => (t.from, t.label)).mapValues(_.last.to)
 
+  /** get all the transitions that could map to this value */
   lazy val idToTransitions = transitions.groupBy(_.to)
 
-  lazy val leaves = transitions.filter(_.from.isEmpty)
-
-  //  require(!leaves.isEmpty)
-
+  /** all possible states */
   lazy val ids = transitions.map(_.to)
 
-  //  require(roots.subsetOf(ids))
-  //  require(transitions.flatMap(_.from.toSet).subsetOf(ids))
-
+  /** all possible labels */
   lazy val labels = transitions.map(_.label)
 
+  /** all possible labels */
   def parse(g: Graph[_, DiEdge])(describe: g.NodeT => LABEL): Option[Map[g.NodeT, Int]] = {
-    require(g.isDirected)
-    require(g.isAcyclic)
+    require(g.isDirected, "graph must be directed")
+    require(g.isAcyclic, "graph must be acyclic")
 
     val Right(ts) = g.topologicalSort
 
@@ -75,8 +48,6 @@ case class TreeDfaFast[LABEL](var transitions: Set[Transition[LABEL, Int]]) { //
 
     Some(map)
   }
-
-  //TODO: premote some of these to the trait interface
 
   private def nonDeterministicMerge(trans: Set[Transition[LABEL, Int]])(a: Int, b: Int): (Set[Transition[LABEL, Int]]) = {
 
@@ -106,9 +77,7 @@ case class TreeDfaFast[LABEL](var transitions: Set[Transition[LABEL, Int]]) { //
 
   //TODO: also take an efficient order, choose the smaller of the 2, this will make the representations unique
   def merge(a: Int, b: Int): (TreeDfaFast[LABEL], Map[Int, Int]) = {
-    //TODO: assume never equal
 
-    //bleh it's a non local mess now
     //using max and min make mereged trees comparable
     var map = Map(Math.max(a, b) -> Math.min(a, b))
 
@@ -132,11 +101,10 @@ case class TreeDfaFast[LABEL](var transitions: Set[Transition[LABEL, Int]]) { //
 
     }
 
-    //TODO: handle roots
-
     (TreeDfaFast(newTrans), map)
   }
 
+  /** the approxamate cost in bits of the tree DFA */
   lazy val cost = {
     val idCost = log2(ids.size)
     val labelCost = log2(labels.size)
@@ -145,6 +113,7 @@ case class TreeDfaFast[LABEL](var transitions: Set[Transition[LABEL, Int]]) { //
     idCost + labelCost + transitions.map(tr => tr.from.multiplicities.map(p => idCost + log2(p._2)).sum + labelCost + idCost).sum
   }
 
+  /** the approxamate cost in bits of a DAG given this tree DFA */
   def conpressionCost(g: Graph[_, DiEdge])(describe: g.NodeT => LABEL): Double =
     parse(g)(describe) match {
       case Some(map) => {
@@ -166,5 +135,3 @@ case class TreeDfaFast[LABEL](var transitions: Set[Transition[LABEL, Int]]) { //
   }
 
 }
-
-  //TODO: normalized dfa

@@ -1,16 +1,14 @@
 
 make the graph interface abstract
 
-if needed learn from number of exampls seen
-
-I think the tree induction can be improved slightly
+if needed learn from number of examples seen
 
 readme.md
 
-tests
+so much clean up
+
+run spell check on comments
 
 hook up to travis or jenkins
 
 property based tests
-
-so much clean up

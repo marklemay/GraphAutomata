@@ -205,4 +205,6 @@ class TestExamples extends AssertionsForJUnit {
     assert(!detdag.parse(bad)(describe).isDefined, "should NOT be able to parse a dag with a different patern")
   }
 
+
+
 }
