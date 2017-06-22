@@ -15,7 +15,6 @@ import math.Logs._
 import java.io.IOException
 import java.io.ObjectOutputStream
 
-
 /**
  * Defines a "DAG grammar" such that each node is completely characterized by it's visible input and output trees.
  */
@@ -25,12 +24,13 @@ case class DagDfa[LABEL](
     //what can deduce about a node from its outputs
     outputTree: TreeDfaFast[LABEL],
 
-    //TODO: rename to nodeTypes?  it's good to think of these as the "type" of node, a label can belong to multiple types with additional conditions on input and output.
+    //TODO: rename to nodeTypes? states?  it's good to think of these as the "type" of node, a label can belong to multiple types with additional conditions on input and output.
     okPairs: Set[(Int, Int)]) {
 
   def parse[A](g: Graph[A, DiEdge])(describe: A => LABEL): Option[Map[A, (Int, Int)]] = {
 
     val reverse = reverseGraph(g)
+
     (inputTree.parse(g)(describeNode(g)(describe)), outputTree.parse(reverse)(describeNode(reverse)(describe))) match {
       case (Some(inMap), Some(outMap)) => {
         val ins = inMap.map(p => p._1.value -> p._2)
@@ -61,27 +61,26 @@ case class DagDfa[LABEL](
     DagDfa(newInputTree, newoutputTree, okPairs.map(p => (inMap.getOrElse(p._1, p._1), outMap.getOrElse(p._2, p._2))))
   }
 
-  //TODO: something like these should also be in the DagDfa class (or in a shared trait)
-  //TODO: make name consistent with the tree version
-
-  lazy val languageDescriptionCost = {
+  lazy val descriptionCost = {
     val labelCost = log2(outputTree.labels.size)
-    (okPairs.size * (log2(inputTree.ids.size.toDouble) + log2(outputTree.ids.size.toDouble)) + inputTree.cost + outputTree.cost
+
+    (okPairs.size * (log2(inputTree.ids.size.toDouble) + log2(outputTree.ids.size.toDouble)) + inputTree.descriptionCost + outputTree.descriptionCost
       - labelCost //  so we don't double count the shared informations
       )
   }
 
-  def graphDescriptionCostGivenLanguage[A](g: Graph[A, DiEdge])(describe: A => LABEL): Double = {
+  def graphDescriptionCostGivenThis[A](g: Graph[A, DiEdge])(describe: A => LABEL): Double = {
 
     val reverse = reverseGraph(g)
 
-    inputTree.conpressionCost(g)(describeNode(g)(describe)) + outputTree.conpressionCost(reverse)(describeNode(reverse)(describe))
+    //note: this is a little arbitrary, for now keeping it simple with just the cost of the trees
+    inputTree.graphDescriptionCostGivenThis(g)(describeNode(g)(describe)) + outputTree.graphDescriptionCostGivenThis(reverse)(describeNode(reverse)(describe))
   }
 
-  //for now keeping it simple with just the cost of the trees
+  /** Minimum Description Length */
   def mdl[A](g: Graph[A, DiEdge])(describe: A => LABEL): Double = {
 
-    languageDescriptionCost + graphDescriptionCostGivenLanguage(g)(describe)
+    descriptionCost + graphDescriptionCostGivenThis(g)(describe)
   }
 
   /** returns the the different node types that can use this label */
@@ -93,39 +92,6 @@ case class DagDfa[LABEL](
     for (
       (in, out) <- okPairs if allLabelInIds.contains(in) && allLabelOutIds.contains(out)
     ) yield (in, out)
-  }
-
-  def getAncestors(inId: Int): Set[Int] = {
-    //    all posible ansestors of a given ID (even when additional Id may also necisarily be created)
-
-    //does scala really not have fixed point operator?
-    //TODO: should probably live in the tree code?
-    val startTime = System.currentTimeMillis().toDouble
-    var reachableIds = Set[Int]()
-
-    var newReachable = inputTree.transitions.filter(t => !t.from.toSet.intersect(reachableIds + inId).isEmpty).map(_.to)
-
-    while (reachableIds != newReachable) {
-      reachableIds = newReachable
-      newReachable = inputTree.transitions.filter(t => !t.from.toSet.intersect(reachableIds + inId).isEmpty).map(_.to)
-    }
-    val endTime = System.currentTimeMillis().toDouble
-    println("Time to get ancestors: " + (endTime - startTime))
-    newReachable
-  }
-
-  def getDescendants(outId: Int) = {
-    var reachableIds = Set[Int]()
-    val startTime = System.currentTimeMillis().toDouble
-    var newReachable = outputTree.transitions.filter(t => !t.from.toSet.intersect(reachableIds + outId).isEmpty).map(_.to)
-
-    while (reachableIds != newReachable) {
-      reachableIds = newReachable
-      newReachable = outputTree.transitions.filter(t => !t.from.toSet.intersect(reachableIds + outId).isEmpty).map(_.to)
-    }
-    val endTime = System.currentTimeMillis().toDouble
-    println("Time to get descendants: " + (endTime - startTime))
-    newReachable
   }
 
 }

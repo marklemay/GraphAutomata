@@ -5,7 +5,6 @@ import scala.collection.immutable.MultiSet._
 import scala.collection.immutable.Bag //suprisingly important to be explicit about this
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiEdge
-import automata.tree.TreeDfa
 import scalax.collection.edge.Implicits._
 import scalax.collection.GraphPredef._
 import scalax.collection.GraphEdge.DiEdge
@@ -68,7 +67,7 @@ class TestExamples extends AssertionsForJUnit {
 
     assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a string with a different patern")
   }
-  
+
   /** learn a linear repeated ab pattern ie "(ab)*" */
   @Test
   def learnRepeadtedStringPattern: Unit = {
@@ -81,9 +80,9 @@ class TestExamples extends AssertionsForJUnit {
       "a_4" ~> "b_4", "b_4" ~> "a_5")
 
     assert(g.isConnected)
-    
+
     val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe, describe)
-    
+
     assert(detdag.parse(g)(describe).isDefined, "should be able to parse itself")
 
     val g2 = Graph(
@@ -149,7 +148,7 @@ class TestExamples extends AssertionsForJUnit {
     assert(g.isAcyclic)
 
     val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe, describe)
-    
+
     assert(detdag.parse(g)(describe).isDefined, "should be able to parse itself")
 
     val g2 = Graph(
@@ -160,7 +159,6 @@ class TestExamples extends AssertionsForJUnit {
     val bad1 = Graph(
       "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3",
       "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2")
-
 
     assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a dag with a different patern")
 
@@ -187,7 +185,6 @@ class TestExamples extends AssertionsForJUnit {
     assert(g.isDirected)
     assert(g.isAcyclic)
 
-
     val detdag = LearnDeterministicDag.greedyLearn(g, 10)(describe, describe)
 
     assert(detdag.parse(g)(describe).isDefined, "should be able to parse itself")
@@ -201,10 +198,7 @@ class TestExamples extends AssertionsForJUnit {
       "start" ~> "single", "single" ~> "single_'", "single_'" ~> "end",
       "start" ~> "...", "..." ~> "..._'", "..._'" ~> "..._''", "..._''" ~> "end")
 
-
     assert(!detdag.parse(bad)(describe).isDefined, "should NOT be able to parse a dag with a different patern")
   }
-
-
 
 }

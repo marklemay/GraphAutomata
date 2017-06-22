@@ -105,7 +105,7 @@ case class TreeDfaFast[LABEL](val transitions: Set[Transition[LABEL, Int]]) {
   }
 
   /** the approxamate cost in bits of the tree DFA */
-  lazy val cost = {
+  lazy val descriptionCost = {
     val idCost = log2(ids.size)
     val labelCost = log2(labels.size)
 
@@ -114,7 +114,7 @@ case class TreeDfaFast[LABEL](val transitions: Set[Transition[LABEL, Int]]) {
   }
 
   /** the approxamate cost in bits of a DAG given this tree DFA */
-  def conpressionCost(g: Graph[_, DiEdge])(describe: g.NodeT => LABEL): Double =
+  def graphDescriptionCostGivenThis(g: Graph[_, DiEdge])(describe: g.NodeT => LABEL): Double =
     parse(g)(describe) match {
       case Some(map) => {
         //TODO: do something with this cooler with bags
@@ -130,8 +130,9 @@ case class TreeDfaFast[LABEL](val transitions: Set[Transition[LABEL, Int]]) {
       case None => Double.PositiveInfinity
     }
 
+  /** Minimum Description Length */
   def mdl(g: Graph[_, DiEdge])(describe: g.NodeT => LABEL): Double = {
-    cost + conpressionCost(g)(describe)
+    descriptionCost + graphDescriptionCostGivenThis(g)(describe)
   }
 
 }
