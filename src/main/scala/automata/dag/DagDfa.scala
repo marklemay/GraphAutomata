@@ -48,7 +48,6 @@ case class DagDfa[LABEL](
     }
   }
 
-  //TODO: could in theory do a merge without  a re parse, it would probably be faster too
   //TODO: We should profile this.  It still runs slower than I think it should.  
   def merge[A](a: (Int, Int), b: (Int, Int)): DagDfa[LABEL] = {
 
