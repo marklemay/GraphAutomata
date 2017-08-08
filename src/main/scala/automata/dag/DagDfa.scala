@@ -19,9 +19,9 @@ import java.io.ObjectOutputStream
  * Defines a "DAG grammar" such that each node is completely characterized by it's visible input and output trees.
  */
 case class DagDfa[LABEL](
-    //what can deduce about a node from its inputs
+    //what can be deduced about a node from its inputs
     inputTree: TreeDfaFast[LABEL],
-    //what can deduce about a node from its outputs
+    //what can be deduced about a node from its outputs
     outputTree: TreeDfaFast[LABEL],
 
     //TODO: rename to nodeTypes? states?  it's good to think of these as the "type" of node, a label can belong to multiple types with additional conditions on input and output.
