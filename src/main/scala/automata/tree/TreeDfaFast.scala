@@ -104,7 +104,7 @@ case class TreeDfaFast[LABEL](val transitions: Set[Transition[LABEL, Int]]) {
     (TreeDfaFast(newTrans), map)
   }
 
-  /** the approxamate cost in bits of the tree DFA */
+  /** the approximate cost in bits of the tree DFA */
   lazy val descriptionCost = {
     val idCost = log2(ids.size)
     val labelCost = log2(labels.size)
@@ -113,7 +113,7 @@ case class TreeDfaFast[LABEL](val transitions: Set[Transition[LABEL, Int]]) {
     idCost + labelCost + transitions.map(tr => tr.from.multiplicities.map(p => idCost + log2(p._2)).sum + labelCost + idCost).sum
   }
 
-  /** the approxamate cost in bits of a DAG given this tree DFA */
+  /** the approximate cost in bits of a DAG given this tree DFA */
   def graphDescriptionCostGivenThis(g: Graph[_, DiEdge])(describe: g.NodeT => LABEL): Double =
     parse(g)(describe) match {
       case Some(map) => {

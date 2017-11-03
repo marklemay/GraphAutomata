@@ -13,7 +13,7 @@ object MultiSet {
   implicit def defualtConfig[A] = Bag.configuration.compact[A]
 
   
-  /** implicitly convert sets to bags */
+  /** Decorate Sets with toBag conversion */
   case class SetExtention[A](val s: Set[A]) {
     def toBag: Bag[A] = {
       val counts = s.map((_, 1)).toSeq
@@ -21,10 +21,10 @@ object MultiSet {
     }
   }
 
-  /** implicitly convert sets to bags */
+  /** Decorate Sets with toBag conversion */
   implicit def setToSetExtention[A](a: Set[A]) = SetExtention(a)
 
-  /** implicitly convert lists to bags */
+  /** Decorate Lists with toBag conversion */
   case class ListExtention[A](val l: List[A]) {
     def toBag: Bag[A] = {
       val counts = l.groupBy(x => x).mapValues(_.size).toSeq
@@ -32,7 +32,7 @@ object MultiSet {
     }
   }
 
-  /** implicitly convert lists to bags */
+  /** Decorate Lists with toBag conversion */
   implicit def listToListExtention[A](a: List[A]) = ListExtention(a)
 
 }
