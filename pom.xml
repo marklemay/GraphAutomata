@@ -7,19 +7,19 @@
 
 	<properties>
 		<neo4j.version>3.0.3</neo4j.version>
-		<scala.version>2.11</scala.version>
-		<scala.graph.version>1.11.0</scala.graph.version>
+		<scala.version>2.12</scala.version>
+		<scala.graph.version>1.12.1</scala.graph.version>
 	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.scala-lang</groupId>
 			<artifactId>scala-library</artifactId>
-			<version>2.11.8</version>
+			<version>2.12.2</version>
 		</dependency>
 
 		<dependency>
-			<groupId>com.assembla.scala-incubator</groupId>
+			<groupId>org.scala-graph</groupId>
 			<artifactId>graph-core_${scala.version}</artifactId>
 			<version>${scala.graph.version}</version>
 		</dependency>
@@ -40,14 +40,14 @@
 		<!-- "recommended but not required". what does it do, and why? -->
 		<dependency>
 			<groupId>org.scalactic</groupId>
-			<artifactId>scalactic_2.11</artifactId>
+			<artifactId>scalactic_${scala.version}</artifactId>
 			<version>3.0.1</version>
 		</dependency>
 
 		<!-- look into the scalatest compiler plugin -->
 		<dependency>
 			<groupId>org.scalatest</groupId>
-			<artifactId>scalatest_2.11</artifactId>
+			<artifactId>scalatest_${scala.version}</artifactId>
 			<version>3.0.1</version>
 			<scope>test</scope>
 		</dependency>
