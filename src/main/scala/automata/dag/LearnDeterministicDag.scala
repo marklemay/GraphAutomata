@@ -45,7 +45,7 @@ object LearnDeterministicDag {
       val cheapest = activeParents.minBy(knownCosts)
       
       
-      // explore the best possible mereges from the best unexplored DFA
+      // explore the best possible merges from the best unexplored DFA
       var newParents = Set[DagDfa[LABEL]]()
       for (
         pairs <- cheapest.okPairs.subsets(2);

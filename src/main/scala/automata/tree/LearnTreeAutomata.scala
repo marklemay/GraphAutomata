@@ -46,7 +46,7 @@ object LearnTreeAutomata {
 
     }
 
-    TreeDfa(transitions, roots) //alreaded minimized
+    TreeDfa(transitions, roots) //already minimized
   }
 
 }

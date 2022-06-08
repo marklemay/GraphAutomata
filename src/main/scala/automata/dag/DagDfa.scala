@@ -1,6 +1,6 @@
 package automata.dag
 import scala.collection.immutable.MultiSet._
-import scala.collection.immutable.Bag //suprisingly important to be explicit about this
+import scala.collection.immutable.Bag //surprisingly important to be explicit about this
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiEdge
 import scalax.collection.edge.Implicits._
@@ -64,7 +64,7 @@ case class DagDfa[LABEL](
     val labelCost = log2(outputTree.labels.size)
 
     (okPairs.size * (log2(inputTree.ids.size.toDouble) + log2(outputTree.ids.size.toDouble)) + inputTree.descriptionCost + outputTree.descriptionCost
-      - labelCost //  so we don't double count the shared informations
+      - labelCost //  so we don't double count the shared information
       )
   }
 
