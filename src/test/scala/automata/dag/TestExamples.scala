@@ -65,7 +65,7 @@ class TestExamples extends AssertionsForJUnit {
 
     val bad1 = Graph("a" ~> "b", "b" ~> "c", "c" ~> "a_1")
 
-    assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a string with a different patern")
+    assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a string with a different pattern")
   }
 
   /** learn a linear repeated ab pattern ie "(ab)*" */
@@ -101,7 +101,7 @@ class TestExamples extends AssertionsForJUnit {
       "a_3" ~> "b_3", "b_3" ~> "a_4",
       "a_4" ~> "b_4", "b_4" ~> "b_5")
 
-    assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a string that does not match the underlieing patern")
+    assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a string that does not match the underlying pattern")
   }
 
   /** learn distinct linear patterns ie "(abcd)|(wxyz)" */
@@ -128,11 +128,11 @@ class TestExamples extends AssertionsForJUnit {
 
     val bad1 = Graph("a" ~> "b", "b" ~> "c", "c" ~> "z")
 
-    assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a string with a different patern")
+    assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a string with a different pattern")
   }
   //TODO: branching trees
   //TODO: concrete trees
-  //TODO: branching trees with some implicit associations (all the leaves have to be consistant)
+  //TODO: branching trees with some implicit associations (all the leaves have to be consistent)
 
   /** learn a repeated diamond pattern */
   @Test
@@ -160,7 +160,7 @@ class TestExamples extends AssertionsForJUnit {
       "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "b_1", "b_1" ~> "a_2", "a_2" ~> "b_3", "b_3" ~> "a_3",
       "a_0" ~> "d_0", "d_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2")
 
-    assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a dag with a different patern")
+    assert(!detdag.parse(bad1)(describe).isDefined, "should NOT be able to parse a dag with a different pattern")
 
     val bad2 = Graph(
       "a_0" ~> "b_0", "b_0" ~> "a_1", "a_1" ~> "d_1", "d_1" ~> "a_2",
@@ -198,7 +198,7 @@ class TestExamples extends AssertionsForJUnit {
       "start" ~> "single", "single" ~> "single_'", "single_'" ~> "end",
       "start" ~> "...", "..." ~> "..._'", "..._'" ~> "..._''", "..._''" ~> "end")
 
-    assert(!detdag.parse(bad)(describe).isDefined, "should NOT be able to parse a dag with a different patern")
+    assert(!detdag.parse(bad)(describe).isDefined, "should NOT be able to parse a dag with a different pattern")
   }
 
 }
