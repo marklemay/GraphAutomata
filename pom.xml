@@ -41,14 +41,14 @@
 		<dependency>
 			<groupId>org.scalactic</groupId>
 			<artifactId>scalactic_${scala.version}</artifactId>
-			<version>3.0.1</version>
+			<version>3.2.12</version>
 		</dependency>
 
 		<!-- look into the scalatest compiler plugin -->
 		<dependency>
 			<groupId>org.scalatest</groupId>
 			<artifactId>scalatest_${scala.version}</artifactId>
-			<version>3.0.1</version>
+			<version>3.2.12</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
