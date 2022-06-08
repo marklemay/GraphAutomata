@@ -8,7 +8,7 @@
 	<properties>
 		<neo4j.version>3.0.3</neo4j.version>
 		<scala.version>2.12</scala.version>
-		<scala.graph.version>1.12.1</scala.graph.version>
+		<scala.graph.version>1.13.1</scala.graph.version>
 	</properties>
 
 	<dependencies>
